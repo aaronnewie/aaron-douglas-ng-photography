@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Aaron Douglas Ng, photographer, Bay Area. Black & white and color photographs.">
+<meta name="theme-color" content="#131514">
+<title>Aaron Douglas Ng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Hanken+Grotesk:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a dark studio backdrop with one soft spotlight. Three hardcover photobooks fan out, the pure white Black & White book in front as the centrepiece. Pick one and it opens into a full-page gallery. */
+:root{
+  color-scheme: dark;
+  --bg:#131514;
+  --bg-hi:#262a28;
+  --ink:#ecebe6;
+  --ink-mute:#979a94;
+  --rule:rgba(236,235,230,.14);
+
+  --white:#ffffff;
+  --stone:#dad4c8;  --stone-deep:#bfb8aa;
+  --clay:#d8b6a8;   --clay-deep:#bd9484;
+
+  --f-display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --f-body:"Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"DM Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.55;
+  overflow-x:hidden;
+}
+body.locked{overflow:hidden}
+
+/* ---------- backdrop ---------- */
+.mat{
+  min-height:100vh;min-height:100dvh;
+  position:relative;isolation:isolate;
+  display:flex;flex-direction:column;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:28px 28px;
+  background:
+    radial-gradient(60% 55% at 50% 46%, var(--bg-hi) 0%, rgba(38,42,40,0) 70%),
+    var(--bg);
+}
+.mat::before{ /* fine grain */
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.top{
+  display:flex;justify-content:center;
+  max-width:1180px;width:100%;margin:0 auto;
+}
+.brand{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.wordmark{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3vw,34px);line-height:1;color:var(--ink);margin:0;letter-spacing:.01em}
+.role{font-family:var(--f-mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-mute);margin:0;padding-top:12px;position:relative}
+.role::before{content:"";position:absolute;top:0;left:50%;width:28px;height:1px;margin-left:-14px;background:var(--ink-mute);opacity:.6}
+/* ---------- stage ---------- */
+.stage{
+  --wm:clamp(250px,29vw,380px);
+  --wf:var(--wm);
+  --sh:0px;
+  flex:1;position:relative;min-height:560px;
+  perspective:1600px;
+  margin-top:8px;
+}
+.folder{
+  --w:var(--wf);
+  --rx:0deg; --ry:0deg; --mx:30%;
+  --bx:0px; --by:0px; --rot:0deg; --dx:0px; --dy:0px;
+  appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;
+  width:var(--w);
+  position:absolute;left:50%;top:50%;
+  translate:calc(-50% + var(--bx) + var(--dx)) calc(-50% + var(--by) + var(--dy));
+  rotate:var(--rot);
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  transform-style:preserve-3d;
+  transition:transform .28s var(--ease-out), opacity .22s;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;
+}
+.folder:focus-visible{outline:none}
+.folder:focus-visible .back{outline:2px solid var(--ink);outline-offset:6px}
+.folder[data-view="about"]{--tint:#93a893;--tint-deep:#5f7a63;--page:#ece9e2;
+  --bx:calc(var(--wm) * -.84);--by:calc(var(--wf) * .07 + var(--sh));--rot:-8deg;z-index:1}
+.folder[data-view="color"]{--tint:#c8745c;--tint-deep:#9b4a36;--page:#ffffff;
+  --bx:calc(var(--wm) * .84);--by:calc(var(--wf) * .07 + var(--sh));--rot:8deg;z-index:2}
+.folder[data-view="black-and-white"]{--w:var(--wm);--tint:#0b0b0b;--tint-deep:#2c2c2c;--page:#000000;
+  --bx:0px;--by:calc(var(--wm) * -.015 + var(--sh));--rot:0deg;z-index:3}
+
+.body{position:relative;aspect-ratio:20/21;transform-style:preserve-3d}
+.back{ /* the book block: a crisp stack of page edges along the right and bottom */
+  position:absolute;inset:0 -6px -6px 0;
+  border-radius:3px 8px 8px 3px;
+  background:
+    repeating-linear-gradient(90deg, #f8f6f0 0 1px, #ddd9ce 1px 2px) right top / 6px 100% no-repeat,
+    repeating-linear-gradient(180deg, #f8f6f0 0 1px, #ddd9ce 1px 2px) left bottom / 100% 6px no-repeat,
+    #f1eee7;
+  box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 30px 50px -22px rgba(0,0,0,.85);
+  transition:box-shadow .3s var(--ease-out);
+}
+.inner{
+  position:absolute;inset:3px 4px 4px 2%;
+  border-radius:1px 4px 4px 1px;
+  background:var(--page);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+.cover{
+  position:absolute;inset:0;
+  transform-origin:0 50%;
+  transform-style:preserve-3d;
+  transition:transform .3s var(--ease-out);
+}
+.face{
+  position:absolute;inset:0;
+  border-radius:3px 7px 7px 3px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;container-type:size;
+}
+.front{
+  background:var(--tint);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset -1px -1px 2px rgba(0,0,0,.05);
+}
+.front::before{ /* hardcover hinge: a flat spine strip with a sharp groove */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(0,0,0,.10) 0, rgba(0,0,0,.10) calc(9% - 3px),
+    rgba(0,0,0,.32) calc(9% - 3px), rgba(0,0,0,.32) calc(9% - 1px),
+    rgba(255,255,255,.55) calc(9% - 1px), rgba(255,255,255,.55) calc(9% + 1px),
+    transparent calc(9% + 1px));
+}
+.folder[data-view="black-and-white"] .front{box-shadow:inset 0 0 0 1px rgba(255,255,255,.13)}
+.front::after{ /* soft sheen that follows the pointer */
+  content:"";position:absolute;inset:-20%;
+  background:linear-gradient(105deg, transparent calc(var(--mx) - 20%), rgba(255,255,255,.35) var(--mx), transparent calc(var(--mx) + 20%));
+  mix-blend-mode:soft-light;
+  opacity:0;transition:opacity .22s;
+  pointer-events:none;
+}
+.rear{transform:rotateY(180deg);background:var(--tint)}
+
+.window{ /* the photo sits on the cover with a wide white margin */
+  position:absolute;
+  overflow:hidden;
+  box-sizing:border-box;border:4px solid #fff;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.28), 0 10px 18px -10px rgba(0,0,0,.35);
+}
+.window img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s var(--ease-out);pointer-events:none;-webkit-user-drag:none}
+.window{left:13%;right:5%;top:5%;bottom:5%}
+.window::after{ /* scrim so the title reads on any photo */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom, rgba(0,0,0,.6) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,0) 60%);
+}
+.ctitle{ /* big title set over the photograph */
+  position:absolute;left:17%;right:9%;top:7.5%;z-index:2;
+  font-family:var(--f-body);font-weight:600;font-size:26px;font-size:13.5cqw;line-height:1;letter-spacing:-.025em;
+  color:#fff;text-wrap:balance;text-shadow:0 1px 16px rgba(0,0,0,.35);
+  pointer-events:none;
+}
+
+/* hover / focus */
+@media (hover:hover){
+  .folder:hover,.folder:focus-visible{transform:translateY(-14px) rotateX(calc(6deg + var(--rx))) rotateY(var(--ry))}
+  .folder:hover .cover,.folder:focus-visible .cover{transform:rotateY(-22deg)}
+  .folder:hover .back,.folder:focus-visible .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 50px 60px -26px rgba(0,0,0,.9)}
+  .folder:hover .front::after,.folder:focus-visible .front::after{opacity:1}
+  .folder:hover .window img{transform:scale(1.05)}
+}
+.folder.dragging{z-index:9999 !important}
+.folder.away{opacity:0 !important;transform:translateY(40px) scale(.94) !important;pointer-events:none}
+.folder.dragging{cursor:grabbing;transform:translateY(-8px) scale(1.03) !important;transition:transform .15s var(--ease-out)}
+.folder.dragging .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 60px 60px -26px rgba(0,0,0,.95)}
+
+/* ---------- footer ---------- */
+.foot{
+  max-width:1180px;width:100%;margin:0 auto;padding-top:16px;
+  display:flex;justify-content:center;text-align:center;align-items:center;flex-wrap:wrap;gap:8px 24px;
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);
+}
+.foot button{appearance:none;background:none;border:0;padding:0;margin-left:14px;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.foot button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.c-coarse{display:none}
+@media (pointer:coarse){ .c-fine{display:none}.c-coarse{display:inline} }
+
+/* ---------- views ---------- */
+.view{
+  position:fixed;inset:0;z-index:50;
+  overflow-y:auto;overscroll-behavior:contain;
+  background:var(--vbg);color:var(--vfg);
+}
+.view[data-view="about"]{--vbg:#ece9e2;--vfg:#171918;--vmute:#5d605b;--vrule:rgba(23,25,24,.15)}
+.view[data-view="black-and-white"]{--vbg:#000000;--vfg:#f2f2f0;--vmute:#9a9a98;--vrule:rgba(255,255,255,.16)}
+.view[data-view="color"]{--vbg:#ffffff;--vfg:#111212;--vmute:#6a6d69;--vrule:rgba(0,0,0,.13)}
+
+.bar{
+  position:sticky;top:0;z-index:2;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:calc(14px + env(safe-area-inset-top, 0px)) 14px;
+  background:color-mix(in srgb, var(--vbg) 90%, transparent);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--vrule);
+}
+.btn{
+  appearance:none;font:inherit;cursor:pointer;
+  font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--vfg);background:transparent;
+  border:1px solid var(--vrule);border-radius:999px;
+  padding:9px 16px;
+  transition:background .2s, border-color .2s;
+}
+.btn:hover{background:color-mix(in srgb, var(--vfg) 8%, transparent);border-color:var(--vfg)}
+.btn:focus-visible{outline:2px solid var(--vfg);outline-offset:3px}
+.vnav{display:flex;gap:2px}
+.vnav button{
+  appearance:none;border:0;background:none;cursor:pointer;font:inherit;
+  font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--vmute);padding:8px 10px;border-radius:999px;
+}
+.vnav button:hover{color:var(--vfg)}
+.vnav button[aria-current="page"]{color:var(--vfg);box-shadow:inset 0 -1px 0 var(--vfg);border-radius:0}
+.vnav button:focus-visible{outline:2px solid var(--vfg);outline-offset:2px}
+
+.wrap{
+  max-width:1180px;margin:0 auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:clamp(36px,6vw,72px) 96px;
+}
+.vhead{display:grid;grid-template-columns:minmax(0,1fr);text-align:center;gap:12px 32px;align-items:end;margin-bottom:clamp(28px,5vw,52px);padding-bottom:20px;border-bottom:1px solid var(--vrule)}
+.vhead h2{font-family:var(--f-display);font-weight:400;font-size:clamp(46px,8vw,104px);line-height:.95;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.vhead p{margin:12px 0 0;max-width:52ch;color:var(--vmute)}
+.vhead .n{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--vmute);white-space:nowrap}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(28px,4vw,48px) clamp(20px,3vw,40px);align-items:start}
+.frame{margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
+.frame button{appearance:none;border:0;padding:0;background:none;cursor:zoom-in;display:block;width:100%;overflow:hidden;border-radius:2px}
+.frame button:focus-visible{outline:2px solid var(--vfg);outline-offset:4px}
+.frame img{width:100%;height:auto;display:block;transition:transform .6s var(--ease-out)}
+.frame button:hover img{transform:scale(1.02)}
+.frame figcaption{display:flex;justify-content:space-between;gap:16px;align-items:baseline;min-width:0}
+.frame figcaption b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.frame figcaption span{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--vmute);text-align:right}
+
+/* about */
+.about{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(28px,5vw,72px);align-items:start}
+.about img{width:100%;height:auto;display:block;border-radius:2px}
+.about h2{font-family:var(--f-display);font-weight:400;font-size:clamp(46px,7vw,90px);line-height:.95;margin:0 0 24px;text-align:center;letter-spacing:-.015em}
+.about p{max-width:58ch;margin:0 0 16px;font-size:18px}
+.facts{margin:32px 0 0;padding:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 28px;border-top:1px solid var(--vrule);padding-top:20px}
+.facts dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--vmute);padding-top:3px}
+.facts dd{margin:0}
+.jump{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+
+/* series inside each book */
+.series-list{display:flex;flex-direction:column;gap:clamp(64px,9vw,112px)}
+.series-head{text-align:center;margin-bottom:clamp(20px,3vw,32px)}
+.series-head h3{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,3.6vw,44px);line-height:1;margin:0;letter-spacing:-.01em}
+.series-head p{margin:10px 0 0;font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--vmute)}
+.empty{text-align:center;color:var(--vmute);font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:48px 0}
+.slot{margin:0;aspect-ratio:3/2;border:1px dashed var(--vrule);border-radius:2px;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--vmute)}
+
+/* lightbox */
+.lightbox{
+  position:fixed;inset:0;z-index:80;
+  background:rgba(8,9,9,.95);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:calc(64px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
+  color:#eef0ec;
+}
+.lightbox img{touch-action:none;user-select:none;-webkit-user-drag:none;max-width:100%;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);object-fit:contain}
+.lightbox p{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;opacity:.8;text-align:center}
+.lightbox .btn{color:#eef0ec;border-color:rgba(255,255,255,.3)}
+.lightbox .btn:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+#lb-close{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:max(16px, env(safe-area-inset-right,0px))}
+.lb-nav{display:flex;gap:10px}
+
+@media (pointer:coarse){ .btn{min-height:44px;padding-inline:18px} }
+
+/* ---------- phones ---------- */
+@media (max-width:760px){
+  .mat{padding-block:20px 20px}
+  .top{gap:6px 16px}
+  .stage{
+    --wm:min(54vw,26dvh,240px);
+    --wf:var(--wm);
+    --sh:0px;
+    min-height:calc(var(--wm) * 2.56 + 12px);margin-top:4px;
+  }
+  .folder[data-view="about"]{--bx:calc(var(--wm) * -.34);--by:calc(var(--wm) * -.756 + var(--sh));--rot:0deg}
+  .folder[data-view="black-and-white"]{--bx:0px;--by:var(--sh);--rot:0deg;z-index:2}
+  .folder[data-view="color"]{--bx:calc(var(--wm) * .34);--by:calc(var(--wm) * .756 + var(--sh));--rot:0deg;z-index:3}
+  .about{grid-template-columns:1fr}
+  .about p{font-size:17px}
+  .vhead{grid-template-columns:1fr}
+  .facts{grid-template-columns:1fr;gap:2px 0}
+  .facts dd{margin-bottom:12px}
+  .wrap{padding-block:28px 72px}
+  .bar{padding-block:calc(10px + env(safe-area-inset-top, 0px)) 10px;gap:8px}
+  .vnav button{padding:8px 7px;font-size:11px;letter-spacing:.08em}
+  .btn{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<main class="mat" id="mat">
+  <header class="top">
+    <div class="brand">
+      <h1 class="wordmark">Aaron Douglas Ng</h1>
+      <p class="role">Photography · Bay Area</p>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <!-- Left: About -->
+    <button class="folder" data-view="about" aria-label="Open About me">
+      <div class="body">
+        <div class="back"></div>
+        <div class="inner"></div>
+        <div class="cover">
+          <div class="face front">
+            <div class="window"><img src="photos/covers/about.jpg" alt="" loading="eager" style="object-position:50% 30%"></div>
+            <span class="ctitle">About</span>
+          </div>
+          <div class="face rear">
+          </div>
+        </div>
+      </div>
+    </button>
+
+    <!-- Right: Color -->
+    <button class="folder" data-view="color" aria-label="Open Color photographs">
+      <div class="body">
+        <div class="back"></div>
+        <div class="inner"></div>
+        <div class="cover">
+          <div class="face front">
+            <div class="window"><img src="photos/covers/color.jpg" alt="" loading="eager" style="object-position:30% 50%"></div>
+            <span class="ctitle">Color</span>
+          </div>
+          <div class="face rear">
+          </div>
+        </div>
+      </div>
+    </button>
+
+    <!-- Centre: Black & White -->
+    <button class="folder" data-view="black-and-white" aria-label="Open Black and White photographs">
+      <div class="body">
+        <div class="back"></div>
+        <div class="inner"></div>
+        <div class="cover">
+          <div class="face front">
+            <div class="window"><img src="photos/covers/black-and-white.jpg" alt="" loading="eager" style="object-position:66% 50%"></div>
+            <span class="ctitle">Black<br>&amp; White</span>
+          </div>
+          <div class="face rear">
+          </div>
+        </div>
+      </div>
+    </button>
+  </div>
+
+  <footer class="foot">
+    <span>Drag to arrange · Click/Tap to open<button type="button" id="reset" hidden>Reset</button></span>
+  </footer>
+</main>
+
+<!-- About -->
+<section class="view" data-view="about" id="view-about" hidden aria-label="About me">
+  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="wrap">
+    <div class="vhead">
+      <div><h2>About me</h2></div>
+    </div>
+    <div class="about">
+      <img src="photos/covers/about.jpg" alt="Self-portrait in a split mirror, holding a Nikon camera, with a San Jose Sharks plush on my shoulder">
+      <div>
+        <p>Born and raised in the Bay Area, the streets have caught my eye lately.</p>
+        <dl class="facts">
+          <dt>Name</dt><dd>Aaron Douglas Ng</dd>
+          <dt>Camera</dt><dd>Nikon D5000, Lumix LX3, Rewindpix</dd>
+          <dt>Shoots</dt><dd>Street, Still Life, Architecture, Portraits</dd>
+        </dl>
+        <div class="jump">
+          <button class="btn" data-goto="black-and-white">Black &amp; White &rarr;</button>
+          <button class="btn" data-goto="color">Color &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Black & White -->
+<section class="view" data-view="black-and-white" id="view-black-and-white" hidden aria-label="Black and White">
+  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="wrap">
+    <div class="vhead">
+      <div><h2>Black &amp; White</h2></div>
+    </div>
+    <div class="grid" data-grid="black-and-white"></div>
+  </div>
+</section>
+
+<!-- Color -->
+<section class="view" data-view="color" id="view-color" hidden aria-label="Color">
+  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="wrap">
+    <div class="vhead">
+      <div><h2>Color</h2></div>
+    </div>
+    <div class="grid" data-grid="color"></div>
+  </div>
+</section>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo">
+  <button class="btn" id="lb-close">Close</button>
+  <img id="lb-img" alt="">
+  <p id="lb-cap"></p>
+  <div class="lb-nav"><button class="btn" id="lb-prev" aria-label="Previous photo">&larr;</button><button class="btn" id="lb-next" aria-label="Next photo">&rarr;</button></div>
+</div>
+
+<script>
+/* ---- Photos come from photos.json, which is generated from the folders in photos/ (see README). ---- */
+const BOOKS = ["black-and-white", "color"];
+const PLACEHOLDERS_UP_TO = 3;   // a series with fewer photos than this shows empty "Photo" frames; set to 0 to turn off
+const PHOTOS = {}, SERIES = {};
+const SECTIONS = [["black-and-white","B & W"],["color","Color"],["about","About"]];
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+async function loadPhotos() {
+  let data = {};
+  try { const r = await fetch("photos.json", { cache:"no-cache" }); if (r.ok) data = await r.json(); }
+  catch (e) { console.warn("photos.json could not be loaded", e); }
+  for (const k of BOOKS) {
+    PHOTOS[k] = [];
+    SERIES[k] = (data[k] || []).map(g => {
+      const idx = g.photos.map(p => PHOTOS[k].push({ src:p.src, alt:p.alt || "" }) - 1);
+      return { title:g.title, note:g.note, photos:idx, slots:Math.max(0, PLACEHOLDERS_UP_TO - idx.length) };
+    });
+  }
+}
+
+/* galleries, grouped into series */
+function buildGalleries() {
+for (const [key, list] of Object.entries(PHOTOS)) {
+  $$(`[data-count="${key}"]`).forEach(el => el.textContent = `${list.length} ${list.length === 1 ? "frame" : "frames"}`);
+  const host = $(`[data-grid="${key}"]`);
+  host.className = "series-list";
+  const groups = SERIES[key] || [{ title:"", note:"", photos:list.map((_, i) => i), slots:0 }];
+  let n = 0;
+  groups.forEach(g => {
+    const sec = document.createElement("section");
+    sec.className = "series";
+    if (g.title) sec.innerHTML = `<header class="series-head"><h3>${g.title}</h3>${g.note ? `<p>${g.note}</p>` : ""}</header>`;
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    g.photos.forEach(i => {
+      const p = list[i]; if (!p) return;
+      const fig = document.createElement("figure");
+      fig.className = "frame";
+      fig.innerHTML = `<button type="button"><img src="${encodeURI(p.src)}" alt="${p.alt}" decoding="async"${n++ > 5 ? ' loading="lazy"' : ""}></button>`;
+      fig.querySelector("button").addEventListener("click", () => openLightbox(key, i));
+      grid.appendChild(fig);
+    });
+    for (let k = 0; k < g.slots; k++) {
+      const slot = document.createElement("figure");
+      slot.className = "slot"; slot.setAttribute("aria-hidden", "true");
+      slot.textContent = "Photo";
+      grid.appendChild(slot);
+    }
+    sec.appendChild(grid);
+    host.appendChild(sec);
+  });
+  if (!groups.length) host.innerHTML = '<p class="empty">New work coming soon.</p>';
+}
+}
+
+/* in-page section switcher */
+$$(".vnav").forEach(nav => {
+  const view = nav.closest(".view").dataset.view;
+  SECTIONS.forEach(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.dataset.goto = k;
+    if (k === view) b.setAttribute("aria-current", "page");
+    nav.appendChild(b);
+  });
+});
+
+let current = null, busy = false;
+let justDragged = false, zTop = 10;
+
+function enableDrag(f) {
+  let id = null, sx = 0, sy = 0, ox = 0, oy = 0, nx = 0, ny = 0, raf = 0, moved = false;
+  f.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || busy || current) return;
+    id = e.pointerId; sx = e.clientX; sy = e.clientY; moved = false;
+    ox = parseFloat(f.style.getPropertyValue("--dx")) || 0;
+    oy = parseFloat(f.style.getPropertyValue("--dy")) || 0;
+  });
+  f.addEventListener("pointermove", e => {
+    if (e.pointerId !== id) return;
+    const cx = Math.min(Math.max(e.clientX, 16), innerWidth - 16);
+    const cy = Math.min(Math.max(e.clientY, 16), innerHeight - 16);
+    const ddx = cx - sx, ddy = cy - sy;
+    if (!moved) {
+      if (Math.hypot(ddx, ddy) < 6) return;
+      moved = true;
+      try { f.setPointerCapture(id); } catch (_) {}
+      f.classList.add("dragging");
+      f.style.zIndex = ++zTop;
+      $("#reset").hidden = false;
+    }
+    nx = ox + ddx; ny = oy + ddy;
+    if (!raf) raf = requestAnimationFrame(() => {
+      raf = 0;
+      f.style.setProperty("--dx", nx + "px");
+      f.style.setProperty("--dy", ny + "px");
+    });
+  });
+  const end = e => {
+    if (e.pointerId !== id) return;
+    id = null;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; f.style.setProperty("--dx", nx + "px"); f.style.setProperty("--dy", ny + "px"); }
+    f.classList.remove("dragging");
+    if (moved) { justDragged = true; setTimeout(() => { justDragged = false; }, 60); }
+  };
+  f.addEventListener("pointerup", end);
+  f.addEventListener("pointercancel", end);
+}
+
+/* pointer tilt + sheen on hover */
+$$(".folder").forEach(f => {
+  f.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse" || f.classList.contains("dragging")) return;
+    const r = f.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    f.style.setProperty("--ry", `${(x - .5) * 8}deg`);
+    f.style.setProperty("--rx", `${(.5 - y) * -5}deg`);
+    f.style.setProperty("--mx", `${x * 100}%`);
+  });
+  f.addEventListener("pointerleave", () => { f.style.setProperty("--ry","0deg"); f.style.setProperty("--rx","0deg"); });
+  f.addEventListener("click", e => {
+    if (justDragged) { justDragged = false; e.preventDefault(); return; }
+    openFolder(f.dataset.view);
+  });
+  enableDrag(f);
+});
+
+$("#reset").addEventListener("click", () => {
+  $$(".folder").forEach(f => { f.style.removeProperty("--dx"); f.style.removeProperty("--dy"); f.style.zIndex = ""; });
+  $("#reset").hidden = true;
+});
+
+/* arrow keys move between folders */
+$("#stage").addEventListener("keydown", e => {
+  if (!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) return;
+  const fs = $$(".folder"); const i = fs.indexOf(document.activeElement);
+  if (i < 0) return; e.preventDefault();
+  const d = (e.key === "ArrowRight" || e.key === "ArrowDown") ? 1 : -1;
+  fs[(i + d + fs.length) % fs.length].focus();
+});
+
+const wait = a => a ? a.finished.catch(()=>{}) : Promise.resolve();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fitScale = f => Math.min(1.7, innerWidth * .72 / f.offsetWidth, innerHeight * .56 / f.offsetHeight);
+const rectInset = r => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 12px)`;
+
+async function openFolder(key) {
+  if (busy || current === key) return;
+  const view = $(`#view-${key}`);
+  if (!view) return;
+  if (current) { $(`#view-${current}`).hidden = true; }
+  current = key;
+  if (location.hash !== "#" + key) history.replaceState(null, "", "#" + key);
+  view.hidden = false; view.scrollTop = 0; document.body.classList.add("locked");
+  if (!reduce) view.animate([{ opacity:0 }, { opacity:1 }], { duration:260, easing:"ease-out" });
+  $("[data-close]", view).focus({preventScroll:true});
+}
+
+async function closeFolder() {
+  if (busy || !current) return;
+  const key = current, folder = $(`.folder[data-view="${key}"]`), view = $(`#view-${key}`);
+  current = null;
+  history.replaceState(null, "", location.pathname + location.search);
+  folder.focus({preventScroll:true});
+  document.body.classList.remove("locked");
+  if (reduce) { view.hidden = true; return; }
+  busy = true;
+  await wait(view.animate([{ opacity:1 }, { opacity:0 }], { duration:200, easing:"ease-in" }));
+  view.hidden = true; busy = false;
+}
+
+$$("[data-close]").forEach(b => b.addEventListener("click", () => closeFolder()));
+$$(".view [data-goto]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.goto; if (k === current || busy) return;
+  $(`#view-${current}`).hidden = true; current = null; openFolder(k, true);
+}));
+
+/* lightbox with previous / next */
+const lb = $("#lightbox");
+let lbKey = null, lbIdx = 0;
+function showLb() {
+  const list = PHOTOS[lbKey], p = list[lbIdx];
+  $("#lb-img").src = encodeURI(p.src); $("#lb-img").alt = p.alt;
+  $("#lb-cap").textContent = list.length > 1 ? `${lbIdx + 1} / ${list.length}` : "";
+  $(".lb-nav").hidden = list.length < 2;
+}
+function openLightbox(key, i) { lbKey = key; lbIdx = i; showLb(); lb.hidden = false; $("#lb-close").focus(); }
+function stepLb(d) { const n = PHOTOS[lbKey].length; lbIdx = (lbIdx + d + n) % n; showLb(); }
+function closeLightbox(){ lb.hidden = true; }
+$("#lb-close").addEventListener("click", closeLightbox);
+$("#lb-prev").addEventListener("click", () => stepLb(-1));
+$("#lb-next").addEventListener("click", () => stepLb(1));
+lb.addEventListener("click", e => { if (e.target === lb) closeLightbox(); });
+
+/* swipe on phones: left/right for previous/next, down to close */
+let sw = null;
+lb.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") sw = { x:e.clientX, y:e.clientY, t:Date.now() }; });
+lb.addEventListener("pointerup", e => {
+  if (!sw) return;
+  const dx = e.clientX - sw.x, dy = e.clientY - sw.y, quick = Date.now() - sw.t < 600;
+  sw = null;
+  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && quick) { stepLb(dx < 0 ? 1 : -1); }
+  else if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.3 && quick) { closeLightbox(); }
+});
+lb.addEventListener("pointercancel", () => { sw = null; });
+
+addEventListener("keydown", e => {
+  if (!lb.hidden) {
+    if (e.key === "Escape") closeLightbox();
+    else if (e.key === "ArrowLeft") stepLb(-1);
+    else if (e.key === "ArrowRight") stepLb(1);
+    return;
+  }
+  if (e.key === "Escape" && current) closeFolder();
+});
+
+/* deep links: #about, #black-and-white, #color */
+function fromHash() {
+  const k = location.hash.slice(1);
+  if (BOOKS.includes(k) || k === "about") { if (k !== current) openFolder(k, true); }
+  else if (current) closeFolder(true);
+}
+addEventListener("hashchange", fromHash);
+loadPhotos().then(() => { buildGalleries(); fromHash(); });
+</script>
+</body>
+</html>
