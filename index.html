@@ -184,16 +184,57 @@ body.locked{overflow:hidden}
 .folder.dragging{cursor:grabbing;transform:translateY(-8px) scale(1.03) !important;transition:transform .15s var(--ease-out)}
 .folder.dragging .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 60px 60px -26px rgba(0,0,0,.95)}
 
+/* ---------- share: desktop "view on phone" popover, phone share menu + full-screen QR ---------- */
+.share{position:fixed;z-index:40;top:max(14px, env(safe-area-inset-top));right:max(14px, env(safe-area-inset-right))}
+.share-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
+  width:40px;height:40px;padding:0;border-radius:999px;border:1px solid rgba(236,235,230,.22);background:rgba(19,21,20,.6);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink);
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;transition:border-color .2s, background .2s}
+.share-btn:hover,.share-btn[aria-expanded="true"]{border-color:rgba(236,235,230,.55);background:rgba(38,42,40,.8)}
+.share-btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.share-btn svg{width:17px;height:17px;flex:none}
+.share-btn .sb-text,.share-btn .i-phone{display:none}
+.share-pop{position:absolute;right:0;top:calc(100% + 10px);min-width:220px;padding:6px;border-radius:14px;
+  background:#1d201f;border:1px solid rgba(236,235,230,.14);box-shadow:0 24px 48px -16px rgba(0,0,0,.8)}
+.share-pop .sp-desk{display:none}
+.sp-mob{display:flex;flex-direction:column}
+.sp-mob button{appearance:none;background:none;border:0;border-radius:9px;text-align:left;cursor:pointer;color:var(--ink);
+  padding:13px 14px;font-family:var(--f-body);font-size:15px;font-weight:500}
+.sp-mob button:hover,.sp-mob button:focus-visible{background:rgba(236,235,230,.08);outline:none}
+.sp-mob button:not([hidden]) ~ button:not([hidden]){border-top:1px solid rgba(236,235,230,.08);border-top-left-radius:0;border-top-right-radius:0}
+
+@media (hover:hover) and (pointer:fine){
+  .share{top:auto;bottom:24px;right:24px}
+  .share-btn{width:auto;height:auto;padding:10px 16px 10px 13px}
+  .share-btn .sb-text,.share-btn .i-phone{display:block}
+  .share-btn .i-share{display:none}
+  .share-pop{top:auto;bottom:calc(100% + 12px);min-width:0;padding:16px 16px 14px;background:#fff;border:0;border-radius:12px;text-align:center}
+  .share-pop .sp-desk{display:block}
+  .share-pop .sp-mob{display:none}
+  .share-pop .qr{display:block;width:156px;height:156px;margin:0 auto}
+  .share-pop p{white-space:nowrap;margin:10px 0 0;font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#555}
+}
+
+.qr-full{position:fixed;inset:0;z-index:300;background:#fff;color:#131514;display:flex;align-items:center;justify-content:center;
+  padding:max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom))}
+.qf-card{display:flex;flex-direction:column;align-items:center;text-align:center}
+.qf-name{margin:0;font-family:var(--f-display);font-size:clamp(34px,9vw,52px);line-height:1}
+.qf-role{margin:14px 0 0;padding-top:14px;position:relative;font-family:var(--f-mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#6e706c}
+.qf-role::before{content:"";position:absolute;top:0;left:50%;width:28px;height:1px;margin-left:-14px;background:#6e706c}
+.qr-full .qr{display:block;width:min(78vw,56vh,420px);height:auto;aspect-ratio:1;margin:clamp(28px,6vh,48px) 0 clamp(20px,4vh,32px)}
+.qf-hint{margin:0;font-family:var(--f-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase}
+.qf-close{position:absolute;top:max(14px, env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:999px;cursor:pointer;
+  appearance:none;border:1px solid rgba(0,0,0,.14);background:#fff;color:#131514;font-size:22px;line-height:1}
+.qf-close:focus-visible{outline:2px solid #131514;outline-offset:3px}
+.toast{position:fixed;left:50%;bottom:max(24px, env(safe-area-inset-bottom));transform:translateX(-50%);z-index:400;
+  padding:10px 16px;border-radius:999px;background:var(--ink);color:#131514;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+
 /* ---------- footer ---------- */
 .foot{
   max-width:1180px;width:100%;margin:0 auto;padding-top:16px;
-  display:flex;flex-direction:column;justify-content:center;text-align:center;align-items:center;gap:14px;
+  display:flex;justify-content:center;text-align:center;align-items:center;flex-wrap:wrap;gap:8px 24px;
   font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);
 }
-.qr-link{display:block;line-height:0;border-radius:6px;overflow:hidden;box-shadow:0 10px 24px -12px rgba(0,0,0,.8)}
-.qr-link:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
-.qr{display:block;width:84px;height:84px}
-@media (max-width:760px){.qr{width:76px;height:76px}}
 .foot button{appearance:none;background:none;border:0;padding:0;margin-left:14px;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .foot button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .c-coarse{display:none}
@@ -381,11 +422,38 @@ body.locked{overflow:hidden}
     </button>
   </div>
 
+
+  <div class="share" id="share">
+    <button type="button" class="share-btn" id="share-btn" aria-expanded="false" aria-controls="share-pop" aria-label="Share this site">
+      <svg class="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M8 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-2"/></svg>
+      <svg class="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
+      <span class="sb-text">View on phone</span>
+    </button>
+    <div class="share-pop" id="share-pop" hidden>
+      <div class="sp-desk"><svg class="qr" viewBox="0 0 37 37" aria-hidden="true" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#111" d="M2 2h7v1h-7zM12 2h1v1h-1zM14 2h2v1h-2zM18 2h1v1h-1zM21 2h3v1h-3zM25 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM14 3h7v1h-7zM22 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h4v1h-4zM18 4h1v1h-1zM20 4h1v1h-1zM23 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM16 5h1v1h-1zM18 5h2v1h-2zM21 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM17 6h1v1h-1zM20 6h3v1h-3zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM17 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h2v1h-2zM13 9h1v1h-1zM16 9h2v1h-2zM20 9h4v1h-4zM25 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM11 10h2v1h-2zM15 10h3v1h-3zM19 10h1v1h-1zM24 10h3v1h-3zM28 10h5v1h-5zM3 11h1v1h-1zM6 11h1v1h-1zM12 11h2v1h-2zM20 11h3v1h-3zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM7 12h2v1h-2zM11 12h1v1h-1zM13 12h1v1h-1zM17 12h2v1h-2zM20 12h1v1h-1zM22 12h3v1h-3zM27 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM4 13h1v1h-1zM11 13h4v1h-4zM16 13h1v1h-1zM18 13h1v1h-1zM21 13h5v1h-5zM27 13h2v1h-2zM30 13h5v1h-5zM3 14h1v1h-1zM5 14h1v1h-1zM8 14h1v1h-1zM10 14h2v1h-2zM13 14h2v1h-2zM19 14h1v1h-1zM24 14h4v1h-4zM29 14h3v1h-3zM33 14h2v1h-2zM2 15h1v1h-1zM4 15h2v1h-2zM7 15h1v1h-1zM12 15h8v1h-8zM21 15h5v1h-5zM28 15h1v1h-1zM31 15h1v1h-1zM33 15h2v1h-2zM4 16h3v1h-3zM8 16h1v1h-1zM10 16h2v1h-2zM13 16h1v1h-1zM15 16h2v1h-2zM20 16h1v1h-1zM22 16h3v1h-3zM27 16h2v1h-2zM33 16h1v1h-1zM3 17h1v1h-1zM5 17h2v1h-2zM9 17h2v1h-2zM12 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h5v1h-5zM27 17h2v1h-2zM32 17h1v1h-1zM2 18h2v1h-2zM8 18h4v1h-4zM15 18h1v1h-1zM19 18h1v1h-1zM21 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM2 19h1v1h-1zM7 19h1v1h-1zM11 19h2v1h-2zM16 19h1v1h-1zM18 19h1v1h-1zM21 19h5v1h-5zM28 19h2v1h-2zM31 19h2v1h-2zM34 19h1v1h-1zM2 20h3v1h-3zM6 20h4v1h-4zM11 20h1v1h-1zM13 20h1v1h-1zM15 20h4v1h-4zM20 20h1v1h-1zM23 20h1v1h-1zM26 20h5v1h-5zM32 20h2v1h-2zM4 21h1v1h-1zM7 21h1v1h-1zM11 21h2v1h-2zM17 21h1v1h-1zM20 21h4v1h-4zM25 21h2v1h-2zM29 21h4v1h-4zM34 21h1v1h-1zM3 22h2v1h-2zM6 22h3v1h-3zM10 22h1v1h-1zM12 22h5v1h-5zM19 22h1v1h-1zM21 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM30 22h2v1h-2zM2 23h2v1h-2zM5 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM13 23h3v1h-3zM17 23h1v1h-1zM20 23h4v1h-4zM25 23h2v1h-2zM28 23h1v1h-1zM31 23h1v1h-1zM34 23h1v1h-1zM2 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h3v1h-3zM17 24h2v1h-2zM24 24h1v1h-1zM30 24h4v1h-4zM2 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM14 25h2v1h-2zM18 25h1v1h-1zM22 25h6v1h-6zM30 25h3v1h-3zM34 25h1v1h-1zM2 26h4v1h-4zM8 26h1v1h-1zM13 26h3v1h-3zM19 26h1v1h-1zM24 26h1v1h-1zM26 26h5v1h-5zM34 26h1v1h-1zM10 27h1v1h-1zM12 27h5v1h-5zM18 27h4v1h-4zM25 27h2v1h-2zM30 27h1v1h-1zM32 27h3v1h-3zM2 28h7v1h-7zM12 28h1v1h-1zM15 28h3v1h-3zM20 28h1v1h-1zM22 28h2v1h-2zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h2v1h-2zM13 29h3v1h-3zM18 29h1v1h-1zM20 29h1v1h-1zM22 29h2v1h-2zM25 29h2v1h-2zM30 29h4v1h-4zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM19 30h1v1h-1zM22 30h1v1h-1zM24 30h1v1h-1zM26 30h6v1h-6zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h2v1h-2zM13 31h2v1h-2zM16 31h1v1h-1zM21 31h2v1h-2zM25 31h3v1h-3zM30 31h5v1h-5zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h1v1h-1zM12 32h9v1h-9zM22 32h2v1h-2zM26 32h1v1h-1zM28 32h2v1h-2zM32 32h1v1h-1zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM17 33h1v1h-1zM20 33h6v1h-6zM30 33h3v1h-3zM2 34h7v1h-7zM10 34h1v1h-1zM13 34h2v1h-2zM16 34h1v1h-1zM19 34h3v1h-3zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z"/></svg><p>Scan to open on your phone</p></div>
+      <div class="sp-mob">
+        <button type="button" data-share="native" hidden>Share link…</button>
+        <button type="button" data-share="copy">Copy link</button>
+        <button type="button" data-share="qr">Show QR code</button>
+      </div>
+    </div>
+  </div>
   <footer class="foot">
-    <a class="qr-link" href="https://aaronnewie.github.io/aaron-douglas-ng-photography/" title="Scan to open this site on another phone"><svg class="qr" viewBox="0 0 37 37" role="img" aria-label="QR code for this site" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#111" d="M2 2h7v1h-7zM12 2h1v1h-1zM14 2h2v1h-2zM18 2h1v1h-1zM21 2h3v1h-3zM25 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM14 3h7v1h-7zM22 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h4v1h-4zM18 4h1v1h-1zM20 4h1v1h-1zM23 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM16 5h1v1h-1zM18 5h2v1h-2zM21 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM17 6h1v1h-1zM20 6h3v1h-3zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM17 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h2v1h-2zM13 9h1v1h-1zM16 9h2v1h-2zM20 9h4v1h-4zM25 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM11 10h2v1h-2zM15 10h3v1h-3zM19 10h1v1h-1zM24 10h3v1h-3zM28 10h5v1h-5zM3 11h1v1h-1zM6 11h1v1h-1zM12 11h2v1h-2zM20 11h3v1h-3zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM7 12h2v1h-2zM11 12h1v1h-1zM13 12h1v1h-1zM17 12h2v1h-2zM20 12h1v1h-1zM22 12h3v1h-3zM27 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM4 13h1v1h-1zM11 13h4v1h-4zM16 13h1v1h-1zM18 13h1v1h-1zM21 13h5v1h-5zM27 13h2v1h-2zM30 13h5v1h-5zM3 14h1v1h-1zM5 14h1v1h-1zM8 14h1v1h-1zM10 14h2v1h-2zM13 14h2v1h-2zM19 14h1v1h-1zM24 14h4v1h-4zM29 14h3v1h-3zM33 14h2v1h-2zM2 15h1v1h-1zM4 15h2v1h-2zM7 15h1v1h-1zM12 15h8v1h-8zM21 15h5v1h-5zM28 15h1v1h-1zM31 15h1v1h-1zM33 15h2v1h-2zM4 16h3v1h-3zM8 16h1v1h-1zM10 16h2v1h-2zM13 16h1v1h-1zM15 16h2v1h-2zM20 16h1v1h-1zM22 16h3v1h-3zM27 16h2v1h-2zM33 16h1v1h-1zM3 17h1v1h-1zM5 17h2v1h-2zM9 17h2v1h-2zM12 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h5v1h-5zM27 17h2v1h-2zM32 17h1v1h-1zM2 18h2v1h-2zM8 18h4v1h-4zM15 18h1v1h-1zM19 18h1v1h-1zM21 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM2 19h1v1h-1zM7 19h1v1h-1zM11 19h2v1h-2zM16 19h1v1h-1zM18 19h1v1h-1zM21 19h5v1h-5zM28 19h2v1h-2zM31 19h2v1h-2zM34 19h1v1h-1zM2 20h3v1h-3zM6 20h4v1h-4zM11 20h1v1h-1zM13 20h1v1h-1zM15 20h4v1h-4zM20 20h1v1h-1zM23 20h1v1h-1zM26 20h5v1h-5zM32 20h2v1h-2zM4 21h1v1h-1zM7 21h1v1h-1zM11 21h2v1h-2zM17 21h1v1h-1zM20 21h4v1h-4zM25 21h2v1h-2zM29 21h4v1h-4zM34 21h1v1h-1zM3 22h2v1h-2zM6 22h3v1h-3zM10 22h1v1h-1zM12 22h5v1h-5zM19 22h1v1h-1zM21 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM30 22h2v1h-2zM2 23h2v1h-2zM5 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM13 23h3v1h-3zM17 23h1v1h-1zM20 23h4v1h-4zM25 23h2v1h-2zM28 23h1v1h-1zM31 23h1v1h-1zM34 23h1v1h-1zM2 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h3v1h-3zM17 24h2v1h-2zM24 24h1v1h-1zM30 24h4v1h-4zM2 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM14 25h2v1h-2zM18 25h1v1h-1zM22 25h6v1h-6zM30 25h3v1h-3zM34 25h1v1h-1zM2 26h4v1h-4zM8 26h1v1h-1zM13 26h3v1h-3zM19 26h1v1h-1zM24 26h1v1h-1zM26 26h5v1h-5zM34 26h1v1h-1zM10 27h1v1h-1zM12 27h5v1h-5zM18 27h4v1h-4zM25 27h2v1h-2zM30 27h1v1h-1zM32 27h3v1h-3zM2 28h7v1h-7zM12 28h1v1h-1zM15 28h3v1h-3zM20 28h1v1h-1zM22 28h2v1h-2zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h2v1h-2zM13 29h3v1h-3zM18 29h1v1h-1zM20 29h1v1h-1zM22 29h2v1h-2zM25 29h2v1h-2zM30 29h4v1h-4zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM19 30h1v1h-1zM22 30h1v1h-1zM24 30h1v1h-1zM26 30h6v1h-6zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h2v1h-2zM13 31h2v1h-2zM16 31h1v1h-1zM21 31h2v1h-2zM25 31h3v1h-3zM30 31h5v1h-5zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h1v1h-1zM12 32h9v1h-9zM22 32h2v1h-2zM26 32h1v1h-1zM28 32h2v1h-2zM32 32h1v1h-1zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM17 33h1v1h-1zM20 33h6v1h-6zM30 33h3v1h-3zM2 34h7v1h-7zM10 34h1v1h-1zM13 34h2v1h-2zM16 34h1v1h-1zM19 34h3v1h-3zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z"/></svg></a>
     <span>Drag to arrange · Click/Tap to open<button type="button" id="reset" hidden>Reset</button></span>
   </footer>
 </main>
+
+
+<!-- full-screen QR, for showing your phone to someone -->
+<div class="qr-full" id="qr-full" hidden role="dialog" aria-modal="true" aria-label="QR code for this site">
+  <button type="button" class="qf-close" aria-label="Close">&times;</button>
+  <div class="qf-card">
+    <p class="qf-name">Aaron Douglas Ng</p>
+    <p class="qf-role">Photography · Bay Area</p>
+    <svg class="qr" viewBox="0 0 37 37" aria-hidden="true" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#111" d="M2 2h7v1h-7zM12 2h1v1h-1zM14 2h2v1h-2zM18 2h1v1h-1zM21 2h3v1h-3zM25 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM14 3h7v1h-7zM22 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h4v1h-4zM18 4h1v1h-1zM20 4h1v1h-1zM23 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM16 5h1v1h-1zM18 5h2v1h-2zM21 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM17 6h1v1h-1zM20 6h3v1h-3zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM17 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h2v1h-2zM13 9h1v1h-1zM16 9h2v1h-2zM20 9h4v1h-4zM25 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM11 10h2v1h-2zM15 10h3v1h-3zM19 10h1v1h-1zM24 10h3v1h-3zM28 10h5v1h-5zM3 11h1v1h-1zM6 11h1v1h-1zM12 11h2v1h-2zM20 11h3v1h-3zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM7 12h2v1h-2zM11 12h1v1h-1zM13 12h1v1h-1zM17 12h2v1h-2zM20 12h1v1h-1zM22 12h3v1h-3zM27 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM4 13h1v1h-1zM11 13h4v1h-4zM16 13h1v1h-1zM18 13h1v1h-1zM21 13h5v1h-5zM27 13h2v1h-2zM30 13h5v1h-5zM3 14h1v1h-1zM5 14h1v1h-1zM8 14h1v1h-1zM10 14h2v1h-2zM13 14h2v1h-2zM19 14h1v1h-1zM24 14h4v1h-4zM29 14h3v1h-3zM33 14h2v1h-2zM2 15h1v1h-1zM4 15h2v1h-2zM7 15h1v1h-1zM12 15h8v1h-8zM21 15h5v1h-5zM28 15h1v1h-1zM31 15h1v1h-1zM33 15h2v1h-2zM4 16h3v1h-3zM8 16h1v1h-1zM10 16h2v1h-2zM13 16h1v1h-1zM15 16h2v1h-2zM20 16h1v1h-1zM22 16h3v1h-3zM27 16h2v1h-2zM33 16h1v1h-1zM3 17h1v1h-1zM5 17h2v1h-2zM9 17h2v1h-2zM12 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h5v1h-5zM27 17h2v1h-2zM32 17h1v1h-1zM2 18h2v1h-2zM8 18h4v1h-4zM15 18h1v1h-1zM19 18h1v1h-1zM21 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM2 19h1v1h-1zM7 19h1v1h-1zM11 19h2v1h-2zM16 19h1v1h-1zM18 19h1v1h-1zM21 19h5v1h-5zM28 19h2v1h-2zM31 19h2v1h-2zM34 19h1v1h-1zM2 20h3v1h-3zM6 20h4v1h-4zM11 20h1v1h-1zM13 20h1v1h-1zM15 20h4v1h-4zM20 20h1v1h-1zM23 20h1v1h-1zM26 20h5v1h-5zM32 20h2v1h-2zM4 21h1v1h-1zM7 21h1v1h-1zM11 21h2v1h-2zM17 21h1v1h-1zM20 21h4v1h-4zM25 21h2v1h-2zM29 21h4v1h-4zM34 21h1v1h-1zM3 22h2v1h-2zM6 22h3v1h-3zM10 22h1v1h-1zM12 22h5v1h-5zM19 22h1v1h-1zM21 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM30 22h2v1h-2zM2 23h2v1h-2zM5 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM13 23h3v1h-3zM17 23h1v1h-1zM20 23h4v1h-4zM25 23h2v1h-2zM28 23h1v1h-1zM31 23h1v1h-1zM34 23h1v1h-1zM2 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h3v1h-3zM17 24h2v1h-2zM24 24h1v1h-1zM30 24h4v1h-4zM2 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM14 25h2v1h-2zM18 25h1v1h-1zM22 25h6v1h-6zM30 25h3v1h-3zM34 25h1v1h-1zM2 26h4v1h-4zM8 26h1v1h-1zM13 26h3v1h-3zM19 26h1v1h-1zM24 26h1v1h-1zM26 26h5v1h-5zM34 26h1v1h-1zM10 27h1v1h-1zM12 27h5v1h-5zM18 27h4v1h-4zM25 27h2v1h-2zM30 27h1v1h-1zM32 27h3v1h-3zM2 28h7v1h-7zM12 28h1v1h-1zM15 28h3v1h-3zM20 28h1v1h-1zM22 28h2v1h-2zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h2v1h-2zM13 29h3v1h-3zM18 29h1v1h-1zM20 29h1v1h-1zM22 29h2v1h-2zM25 29h2v1h-2zM30 29h4v1h-4zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM19 30h1v1h-1zM22 30h1v1h-1zM24 30h1v1h-1zM26 30h6v1h-6zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h2v1h-2zM13 31h2v1h-2zM16 31h1v1h-1zM21 31h2v1h-2zM25 31h3v1h-3zM30 31h5v1h-5zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h1v1h-1zM12 32h9v1h-9zM22 32h2v1h-2zM26 32h1v1h-1zM28 32h2v1h-2zM32 32h1v1h-1zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM17 33h1v1h-1zM20 33h6v1h-6zM30 33h3v1h-3zM2 34h7v1h-7zM10 34h1v1h-1zM13 34h2v1h-2zM16 34h1v1h-1zM19 34h3v1h-3zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z"/></svg>
+    <p class="qf-hint">Scan to see the work</p>
+  </div>
+</div>
 
 <!-- About -->
 <section class="view" data-view="about" id="view-about" hidden aria-label="About me">
@@ -666,6 +734,47 @@ function fromHash() {
   if (BOOKS.includes(k) || k === "about") { if (k !== current) openFolder(k, true); }
   else if (current) closeFolder(true);
 }
+/* ---- share: desktop QR popover, phone share menu, full-screen QR ---- */
+{
+  const btn = $("#share-btn"), pop = $("#share-pop"), full = $("#qr-full");
+  const siteUrl = () => location.href.split("#")[0];
+  const setOpen = open => { pop.hidden = !open; btn.setAttribute("aria-expanded", String(open)); };
+  btn.addEventListener("click", e => { e.stopPropagation(); setOpen(pop.hidden); });
+  document.addEventListener("click", e => { if (!pop.hidden && !pop.contains(e.target)) setOpen(false); });
+  const native = $('[data-share="native"]', pop);
+  if (navigator.share) native.hidden = false;
+  const toast = msg => {
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t);
+    setTimeout(() => t.remove(), 1600);
+  };
+  native.addEventListener("click", async () => {
+    setOpen(false);
+    try { await navigator.share({ title:"Aaron Douglas Ng — Photography", url:siteUrl() }); } catch (_) {}
+  });
+  $('[data-share="copy"]', pop).addEventListener("click", async () => {
+    setOpen(false);
+    try { await navigator.clipboard.writeText(siteUrl()); toast("Link copied"); }
+    catch (_) { prompt("Copy this link:", siteUrl()); }
+  });
+  let lock = null;
+  const showQr = async () => {
+    setOpen(false); full.hidden = false; document.body.classList.add("locked");
+    $(".qf-close", full).focus({ preventScroll:true });
+    try { lock = await navigator.wakeLock?.request("screen"); } catch (_) {}
+  };
+  const hideQr = () => {
+    full.hidden = true; document.body.classList.remove("locked");
+    try { lock?.release(); } catch (_) {} lock = null; btn.focus({ preventScroll:true });
+  };
+  $('[data-share="qr"]', pop).addEventListener("click", showQr);
+  full.addEventListener("click", hideQr);
+  addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (!full.hidden) { e.stopImmediatePropagation(); hideQr(); }
+    else if (!pop.hidden) { setOpen(false); btn.focus(); }
+  }, true);
+}
+
 addEventListener("hashchange", fromHash);
 loadPhotos().then(() => { buildGalleries(); fromHash(); });
 </script>
