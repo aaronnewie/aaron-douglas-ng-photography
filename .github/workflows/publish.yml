@@ -38,7 +38,7 @@ jobs:
       - name: Resize photos for the web
         run: |
           python3 -m pip install --quiet pillow
-          python3 scripts/resize_photos.py _site/photos
+          python3 scripts/resize_photos.py _site
 
       - uses: actions/configure-pages@v5
 

@@ -342,6 +342,16 @@ body.locked{overflow:hidden}
 
 @media (pointer:coarse){ .btn{min-height:44px;padding-inline:18px} }
 
+/* phones and tablets: skip effects that are slow to paint while scrolling (notably Firefox on Android) */
+.series{content-visibility:auto;contain-intrinsic-size:auto 900px}
+@media (pointer:coarse), (max-width:760px){
+  .mat::before{display:none}
+  .bar{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--vbg)}
+  .share-btn{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(19,21,20,.92)}
+  .front::after{display:none}
+  .frame img{transition:none}
+}
+
 /* ---------- phones ---------- */
 @media (max-width:760px){
   .grid{grid-template-columns:1fr}
@@ -537,7 +547,7 @@ async function loadPhotos() {
   for (const k of BOOKS) {
     PHOTOS[k] = [];
     SERIES[k] = (data[k] || []).map(g => {
-      const idx = g.photos.map(p => PHOTOS[k].push({ src:p.src, alt:p.alt || "" }) - 1);
+      const idx = g.photos.map(p => PHOTOS[k].push({ src:p.src, alt:p.alt || "", w:p.w, h:p.h }) - 1);
       return { title:g.title, note:g.note, photos:idx, slots:Math.max(0, PLACEHOLDERS_UP_TO - idx.length) };
     });
   }
@@ -561,11 +571,23 @@ for (const [key, list] of Object.entries(PHOTOS)) {
       const p = list[i]; if (!p) return;
       const fig = document.createElement("figure");
       fig.className = "frame";
-      fig.innerHTML = `<button type="button"><img src="${encodeURI(p.src)}" alt="${p.alt}" decoding="async"${n++ > 5 ? ' loading="lazy"' : ""}></button>`;
+      // the grid shows the light copy, at most 1200px wide (thumbs/); the full-screen viewer uses the full photo
+      const full = encodeURI(p.src), thumb = encodeURI(p.src.replace(/^photos\//, "thumbs/"));
+      let extra = "";
+      if (p.w && p.h) {
+        const tw = Math.min(p.w, 1200);
+        const wide = p.w >= p.h;
+        extra = ` width="${p.w}" height="${p.h}"`;
+        if (tw < p.w) extra += ` srcset="${thumb} ${tw}w, ${full} ${p.w}w" sizes="(max-width:760px) 100vw, ${wide ? 760 : 380}px"`;
+      }
+      fig.innerHTML = `<button type="button"><img src="${thumb}"${extra} alt="${p.alt}" decoding="async"${n++ > 1 ? ' loading="lazy"' : ""}></button>`;
       fig.querySelector("button").addEventListener("click", () => openLightbox(key, i));
       const img = fig.querySelector("img");
-      const markOrientation = () => { if (img.naturalWidth >= img.naturalHeight) fig.classList.add("is-wide"); };
-      if (img.complete) markOrientation(); else img.addEventListener("load", markOrientation, { once:true });
+      img.addEventListener("error", () => { img.removeAttribute("srcset"); img.src = full; }, { once:true });
+      const markOrientation = (w, h) => { if (w && h && w >= h) fig.classList.add("is-wide"); };
+      if (p.w && p.h) markOrientation(p.w, p.h);
+      else if (img.complete) markOrientation(img.naturalWidth, img.naturalHeight);
+      else img.addEventListener("load", () => markOrientation(img.naturalWidth, img.naturalHeight), { once:true });
       grid.appendChild(fig);
     });
     for (let k = 0; k < g.slots; k++) {
