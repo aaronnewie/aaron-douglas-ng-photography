@@ -248,7 +248,7 @@ body.locked{overflow:hidden}
 }
 .view[data-view="about"]{--vbg:#ece9e2;--vfg:#171918;--vmute:#5d605b;--vrule:rgba(23,25,24,.15)}
 .view[data-view="black-and-white"]{--vbg:#000000;--vfg:#f2f2f0;--vmute:#9a9a98;--vrule:rgba(255,255,255,.16)}
-.view[data-view="color"]{--vbg:#ffffff;--vfg:#111212;--vmute:#6a6d69;--vrule:rgba(0,0,0,.13)}
+.view[data-view="color"]{--vbg:#000000;--vfg:#f2f2f0;--vmute:#9a9a98;--vrule:rgba(255,255,255,.16)}
 
 .bar{
   position:sticky;top:0;z-index:2;
@@ -291,12 +291,15 @@ body.locked{overflow:hidden}
 .vhead p{margin:12px 0 0;max-width:52ch;color:var(--vmute)}
 .vhead .n{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--vmute);white-space:nowrap}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(28px,4vw,48px) clamp(20px,3vw,40px);align-items:start}
+.grid{display:grid;grid-auto-flow:dense;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:clamp(28px,4vw,48px) clamp(20px,3vw,40px);align-items:start}
 .frame{margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
+.frame.is-wide{grid-column:span 2}
 .frame button{appearance:none;border:0;padding:0;background:none;cursor:zoom-in;display:block;width:100%;overflow:hidden;border-radius:2px}
 .frame button:focus-visible{outline:2px solid var(--vfg);outline-offset:4px}
 .frame img{width:100%;height:auto;display:block;transition:transform .6s var(--ease-out)}
 .frame button:hover img{transform:scale(1.02)}
+.view[data-view="black-and-white"] .frame img,
+.view[data-view="color"] .frame img{border:6px solid var(--ink);box-sizing:border-box}
 .frame figcaption{display:flex;justify-content:space-between;gap:16px;align-items:baseline;min-width:0}
 .frame figcaption b{font-family:var(--f-display);font-weight:400;font-size:22px}
 .frame figcaption span{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--vmute);text-align:right}
@@ -558,6 +561,9 @@ for (const [key, list] of Object.entries(PHOTOS)) {
       fig.className = "frame";
       fig.innerHTML = `<button type="button"><img src="${encodeURI(p.src)}" alt="${p.alt}" decoding="async"${n++ > 5 ? ' loading="lazy"' : ""}></button>`;
       fig.querySelector("button").addEventListener("click", () => openLightbox(key, i));
+      const img = fig.querySelector("img");
+      const markOrientation = () => { if (img.naturalWidth >= img.naturalHeight) fig.classList.add("is-wide"); };
+      if (img.complete) markOrientation(); else img.addEventListener("load", markOrientation, { once:true });
       grid.appendChild(fig);
     });
     for (let k = 0; k < g.slots; k++) {
