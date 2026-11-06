@@ -294,12 +294,12 @@ body.locked{overflow:hidden}
 .grid{display:grid;grid-auto-flow:dense;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:clamp(28px,4vw,48px) clamp(20px,3vw,40px);align-items:start}
 .frame{margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
 .frame.is-wide{grid-column:span 2}
-.frame button{appearance:none;border:0;padding:0;background:none;cursor:zoom-in;display:block;width:100%;overflow:hidden;border-radius:2px}
+.frame button{appearance:none;border:0;padding:0;background:none;cursor:zoom-in;display:block;width:100%;overflow:hidden;border-radius:0}
 .frame button:focus-visible{outline:2px solid var(--vfg);outline-offset:4px}
 .frame img{width:100%;height:auto;display:block;transition:transform .6s var(--ease-out)}
 .frame button:hover img{transform:scale(1.02)}
-.view[data-view="black-and-white"] .frame img,
-.view[data-view="color"] .frame img{border:6px solid var(--ink);box-sizing:border-box}
+.view[data-view="black-and-white"] .frame button,
+.view[data-view="color"] .frame button{border:3px solid var(--ink);box-sizing:border-box}
 .frame figcaption{display:flex;justify-content:space-between;gap:16px;align-items:baseline;min-width:0}
 .frame figcaption b{font-family:var(--f-display);font-weight:400;font-size:22px}
 .frame figcaption span{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--vmute);text-align:right}
