@@ -333,6 +333,7 @@ body.locked{overflow:hidden}
   padding:calc(64px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
   color:#eef0ec;
 }
+.lightbox{touch-action:none}  /* swipes on the dark area count too, and the page underneath can't scroll or pull-to-refresh */
 .lightbox img{touch-action:none;user-select:none;-webkit-user-drag:none;max-width:100%;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);object-fit:contain}
 .lightbox p{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;opacity:.8;text-align:center}
 .lightbox .btn{color:#eef0ec;border-color:rgba(255,255,255,.3)}
@@ -693,23 +694,34 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fitScale = f => Math.min(1.7, innerWidth * .72 / f.offsetWidth, innerHeight * .56 / f.offsetHeight);
 const rectInset = r => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 12px)`;
 
-async function openFolder(key) {
+/* Browser history: opening an album, the photo viewer or the full-screen QR each
+   adds one step, so the phone's back gesture / back button closes that layer
+   instead of leaving the site. Closing with an on-screen button steps back too,
+   so history never piles up. */
+const baseUrl = () => location.pathname + location.search;
+let goingBack = false;  // a back step is already on its way; ignore repeat taps until it lands
+const stepBack = () => { if (!goingBack) { goingBack = true; history.back(); } };
+
+// mode: "push" (opened by a tap), "replace" (switching between albums), "none" (came from history)
+async function openFolder(key, mode = "push") {
   if (busy || current === key) return;
   const view = $(`#view-${key}`);
   if (!view) return;
   if (current) { $(`#view-${current}`).hidden = true; }
   current = key;
-  if (location.hash !== "#" + key) history.replaceState(null, "", "#" + key);
+  if (mode === "push") history.pushState({ album:key }, "", "#" + key);
+  else if (mode === "replace") history.replaceState({ album:key }, "", "#" + key);
   view.hidden = false; view.scrollTop = 0; document.body.classList.add("locked");
   if (!reduce) view.animate([{ opacity:0 }, { opacity:1 }], { duration:260, easing:"ease-out" });
   $("[data-close]", view).focus({preventScroll:true});
 }
 
-async function closeFolder() {
+async function closeFolder(fromHistory = false) {
   if (busy || !current) return;
+  if (!fromHistory && history.state?.album === current) { stepBack(); return; }  // popstate finishes the job
   const key = current, folder = $(`.folder[data-view="${key}"]`), view = $(`#view-${key}`);
   current = null;
-  history.replaceState(null, "", location.pathname + location.search);
+  if (!fromHistory) history.replaceState(null, "", baseUrl());
   folder.focus({preventScroll:true});
   document.body.classList.remove("locked");
   if (reduce) { view.hidden = true; return; }
@@ -721,7 +733,7 @@ async function closeFolder() {
 $$("[data-close]").forEach(b => b.addEventListener("click", () => closeFolder()));
 $$(".view [data-goto]").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.goto; if (k === current || busy) return;
-  $(`#view-${current}`).hidden = true; current = null; openFolder(k, true);
+  $(`#view-${current}`).hidden = true; current = null; openFolder(k, "replace");
 }));
 
 /* lightbox with previous / next */
@@ -733,10 +745,19 @@ function showLb() {
   $("#lb-cap").textContent = list.length > 1 ? `${lbIdx + 1} / ${list.length}` : "";
   $(".lb-nav").hidden = list.length < 2;
 }
-function openLightbox(key, i) { lbKey = key; lbIdx = i; showLb(); lb.hidden = false; $("#lb-close").focus(); }
+function openLightbox(key, i) {
+  lbKey = key; lbIdx = i; showLb(); lb.hidden = false; $("#lb-close").focus();
+  history.pushState({ album:current, layer:"lb" }, "", location.href);
+}
 function stepLb(d) { const n = PHOTOS[lbKey].length; lbIdx = (lbIdx + d + n) % n; showLb(); }
-function closeLightbox(){ lb.hidden = true; }
-$("#lb-close").addEventListener("click", closeLightbox);
+function closeLightbox(fromHistory = false) {
+  if (lb.hidden) return;
+  if (!fromHistory && history.state?.layer === "lb") { stepBack(); return; }
+  lb.hidden = true;
+  const btn = $$(`[data-grid="${lbKey}"] .frame button`)[lbIdx];  // return focus to the photo you were on
+  btn?.focus({ preventScroll:true });
+}
+$("#lb-close").addEventListener("click", () => closeLightbox());
 $("#lb-prev").addEventListener("click", () => stepLb(-1));
 $("#lb-next").addEventListener("click", () => stepLb(1));
 lb.addEventListener("click", e => { if (e.target === lb) closeLightbox(); });
@@ -766,8 +787,29 @@ addEventListener("keydown", e => {
 /* deep links: #about, #black-and-white, #color */
 function fromHash() {
   const k = location.hash.slice(1);
-  if (BOOKS.includes(k) || k === "about") { if (k !== current) openFolder(k, true); }
+  if (BOOKS.includes(k) || k === "about") { if (k !== current) openFolder(k, "none"); }
   else if (current) closeFolder(true);
+}
+
+/* back / forward: close whatever layer is no longer in history, then match the album to the URL */
+function syncWithHistory() {
+  goingBack = false;
+  if (busy) { setTimeout(syncWithHistory, 60); return; }  // an album is mid-animation
+  const layer = history.state?.layer;
+  if (layer !== "lb") closeLightbox(true);
+  if (layer !== "qr") document.dispatchEvent(new Event("qr:history-close"));
+  fromHash();
+}
+addEventListener("popstate", syncWithHistory);
+
+/* Opened straight on an album link (e.g. …/#color from a shared link)? Put the
+   folders page underneath it, so going back lands on the site, not off it. */
+function startFromLink() {
+  const k = location.hash.slice(1);
+  if ((BOOKS.includes(k) || k === "about") && !history.state) {
+    history.replaceState(null, "", baseUrl());
+    history.pushState({ album:k }, "", "#" + k);
+  }
 }
 /* ---- share: desktop QR popover, phone share menu, full-screen QR ---- */
 {
@@ -794,15 +836,20 @@ function fromHash() {
   let lock = null;
   const showQr = async () => {
     setOpen(false); full.hidden = false; document.body.classList.add("locked");
+    history.pushState({ album:current, layer:"qr" }, "", location.href);
     $(".qf-close", full).focus({ preventScroll:true });
     try { lock = await navigator.wakeLock?.request("screen"); } catch (_) {}
   };
-  const hideQr = () => {
-    full.hidden = true; document.body.classList.remove("locked");
+  const hideQr = (fromHistory = false) => {
+    if (full.hidden) return;
+    if (!fromHistory && history.state?.layer === "qr") { stepBack(); return; }
+    full.hidden = true;
+    if (!current) document.body.classList.remove("locked");
     try { lock?.release(); } catch (_) {} lock = null; btn.focus({ preventScroll:true });
   };
+  document.addEventListener("qr:history-close", () => { hideQr(true); setOpen(false); });
   $('[data-share="qr"]', pop).addEventListener("click", showQr);
-  full.addEventListener("click", hideQr);
+  full.addEventListener("click", () => hideQr());
   addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
     if (!full.hidden) { e.stopImmediatePropagation(); hideQr(); }
@@ -810,7 +857,7 @@ function fromHash() {
   }, true);
 }
 
-addEventListener("hashchange", fromHash);
+startFromLink();
 loadPhotos().then(() => { buildGalleries(); fromHash(); });
 </script>
 </body>
