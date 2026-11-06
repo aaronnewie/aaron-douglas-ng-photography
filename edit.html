@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#131514">
+<title>Editor · Aaron Douglas Ng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Hanken+Grotesk:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Private editor for the photo site. Same dark studio palette as the site,
+   built for thumbs first: big tap targets, long-press to drag, one book at a time. */
+:root{
+  color-scheme:dark;
+  --bg:#131514; --panel:#1b1e1c; --panel-hi:#232725;
+  --ink:#ecebe6; --mute:#979a94; --rule:rgba(236,235,230,.14); --rule-hi:rgba(236,235,230,.3);
+  --accent:#ecebe6; --danger:#e08a7a; --ok:#9fc79a;
+  --f-display:"Instrument Serif","Iowan Old Style",Georgia,serif;
+  --f-body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  --pad:max(16px, env(safe-area-inset-left, 0px));
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button,a,label{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.mono{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;
+  border:1px solid var(--rule-hi);background:transparent;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:#131514;border-color:var(--ink)}
+.btn.primary:disabled{background:transparent;color:var(--mute);border-color:var(--rule);cursor:default}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 45%, transparent)}
+.btn.small{min-height:36px;padding:0 14px;font-size:11px}
+.icon-btn{appearance:none;display:inline-grid;place-items:center;width:44px;height:44px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--mute)}
+.icon-btn:hover{color:var(--ink);border-color:var(--rule)}
+.icon-btn svg{width:20px;height:20px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--bg)}
+.bar{display:flex;align-items:center;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) var(--pad) 10px;background:var(--bg);border-bottom:1px solid var(--rule)}
+.bar h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar h1 a{text-decoration:none}
+.bar h1 small{font-family:var(--f-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin-left:8px;vertical-align:middle}
+.status{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--mute);text-align:right}
+.status.ok{color:var(--ok)} .status.err{color:var(--danger)}
+
+/* book switch */
+.books{display:flex;justify-content:center;gap:4px;padding:10px var(--pad);background:var(--bg);border-bottom:1px solid var(--rule)}
+.books button{appearance:none;flex:1;max-width:260px;min-height:42px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--mute);
+  font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.books button[aria-pressed="true"]{background:var(--ink);color:#131514;border-color:var(--ink)}
+
+main{max-width:1100px;margin:0 auto;padding:18px var(--pad) calc(120px + env(safe-area-inset-bottom,0px))}
+.hint{color:var(--mute);font-size:14px;margin:0 0 18px}
+
+/* series cards */
+.series-list{display:flex;flex-direction:column;gap:16px}
+.series{background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:12px}
+.s-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 8px;align-items:center}
+.s-handle{cursor:grab;touch-action:none}
+.s-fields{display:flex;flex-direction:column;gap:2px;min-width:0}
+.s-title{appearance:none;width:100%;border:0;border-bottom:1px solid transparent;background:transparent;padding:4px 2px;
+  font-family:var(--f-display);font-size:28px;line-height:1.1}
+.s-note{appearance:none;width:100%;border:0;border-bottom:1px solid transparent;background:transparent;padding:2px 2px 4px;
+  font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.s-title:hover,.s-note:hover{border-bottom-color:var(--rule)}
+.s-title:focus,.s-note:focus{outline:none;border-bottom-color:var(--ink)}
+.s-actions{display:flex;align-items:center}
+.s-count{font-family:var(--f-mono);font-size:11px;color:var(--mute);letter-spacing:.08em;margin:6px 0 10px 54px}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-height:96px;border-radius:10px;align-content:start}
+@media (min-width:640px){ .grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px} }
+@media (min-width:980px){ .grid{grid-template-columns:repeat(6,minmax(0,1fr))} }
+.grid:empty{border:1px dashed var(--rule-hi);display:grid;place-items:center}
+.grid:empty::before{content:"Drag photos here, or add some";font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:0 12px;text-align:center}
+.grid.drop-target{outline:2px dashed var(--ink);outline-offset:4px}
+.tile{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--panel-hi);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.tile .badge{position:absolute;left:5px;top:5px;padding:2px 6px;border-radius:999px;background:rgba(19,21,20,.78);font-family:var(--f-mono);font-size:10px;letter-spacing:.08em}
+.tile .badge.new{background:var(--ink);color:#131514}
+.tile.ghost{opacity:.35}
+.tile.chosen{outline:2px solid var(--ink);outline-offset:-2px}
+.tile.drag{opacity:.95;transform:scale(1.04);box-shadow:0 12px 30px rgba(0,0,0,.6)}
+.add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.file-label{position:relative;overflow:hidden}
+.file-label input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.new-series{margin-top:16px;width:100%}
+
+/* sign in */
+.signin{max-width:560px;margin:8vh auto 0;padding:0 var(--pad)}
+.signin h2{font-family:var(--f-display);font-weight:400;font-size:44px;line-height:1;margin:0 0 12px}
+.signin ol{padding-left:20px;color:var(--mute);margin:16px 0 22px}
+.signin ol li{margin-bottom:8px}
+.signin ol b{color:var(--ink);font-weight:500}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field input,.field select,.field textarea{appearance:none;width:100%;min-height:46px;padding:10px 14px;border-radius:12px;border:1px solid var(--rule-hi);background:var(--panel)}
+.field textarea{min-height:80px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.err-text{color:var(--danger);font-size:14px;min-height:1.5em}
+
+/* photo sheet */
+dialog{border:0;padding:0;background:transparent;color:var(--ink);max-width:none;max-height:none}
+dialog::backdrop{background:rgba(5,6,6,.7)}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:min(560px,100%);max-height:92dvh;overflow:auto;background:var(--panel);
+  border-radius:18px 18px 0 0;border:1px solid var(--rule);border-bottom:0;padding:16px var(--pad) calc(18px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){ .sheet{top:50%;bottom:auto;transform:translateY(-50%);border-radius:18px;border-bottom:1px solid var(--rule)} }
+.sheet-img{width:100%;max-height:42dvh;object-fit:contain;background:#0c0d0d;border-radius:10px;display:block;margin-bottom:14px}
+.sheet-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sheet-row .btn{flex:1}
+.sheet .name{font-family:var(--f-mono);font-size:11px;color:var(--mute);letter-spacing:.06em;margin:-6px 0 12px;word-break:break-all}
+
+/* saving overlay */
+.busy{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(10,11,11,.82);text-align:center;padding:24px}
+.busy p{margin:12px 0 0;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.spinner{width:34px;height:34px;border-radius:50%;border:2px solid var(--rule-hi);border-top-color:var(--ink);margin:0 auto;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);
+  padding:12px 18px;border-radius:14px;background:var(--ink);color:#131514;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.foot-actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:28px;padding-top:18px;border-top:1px solid var(--rule)}
+@media (prefers-reduced-motion:reduce){ .spinner{animation-duration:3s} }
+</style>
+</head>
+<body>
+
+<div class="top">
+<header class="bar">
+  <h1><a href="./">Aaron Douglas Ng</a><small>Editor</small></h1>
+  <span class="status" id="status" aria-live="polite"></span>
+  <button class="btn primary" id="save" type="button" disabled hidden>Save</button>
+</header>
+
+<nav class="books" id="books" hidden aria-label="Book">
+  <button type="button" data-book="black-and-white" aria-pressed="true">Black &amp; White</button>
+  <button type="button" data-book="color" aria-pressed="false">Color</button>
+</nav>
+</div>
+
+<!-- connect -->
+<section class="signin" id="signin" hidden>
+  <h2>Edit your site</h2>
+  <p>This page edits your photos on GitHub directly. Connect it once on each phone or computer with a GitHub key that can only touch this site.</p>
+  <ol>
+    <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener"><b>GitHub → New fine-grained token</b></a> (sign in if asked).</li>
+    <li>Name it anything, e.g. <b>Site editor</b>. Set <b>Expiration</b> as long as you like.</li>
+    <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → <b>aaron-douglas-ng-photography</b>.</li>
+    <li>Under <b>Permissions → Repository permissions</b> set <b>Contents</b> to <b>Read and write</b>. Optional: <b>Actions</b> to <b>Read-only</b>, so the editor can tell you when the site is live.</li>
+    <li>Press <b>Generate token</b>, copy it, and paste it below.</li>
+  </ol>
+  <div class="field">
+    <label for="token" class="mono">GitHub key</label>
+    <input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+  </div>
+  <p class="err-text" id="signin-err" role="alert"></p>
+  <button class="btn primary" id="connect" type="button">Connect</button>
+  <p class="hint" style="margin-top:18px">The key stays in this browser only. Anyone without it can open this page but can't change anything.</p>
+</section>
+
+<!-- loading -->
+<div class="busy" id="busy" hidden><div><div class="spinner"></div><p id="busy-text">Loading</p></div></div>
+
+<!-- editor -->
+<main id="editor" hidden>
+  <p class="hint" id="hint">Long-press a photo and drag to reorder it or move it to another series. Tap a photo for more options. Drag <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M4 8h16M4 16h16"/></svg> to reorder series. Nothing changes on the site until you press <b>Save</b>.</p>
+  <div class="series-list" id="series-list"></div>
+  <button class="btn new-series" id="new-series" type="button">+ New series</button>
+  <div class="foot-actions">
+    <button class="btn small" id="discard" type="button">Discard changes</button>
+    <button class="btn small" id="signout" type="button">Disconnect this device</button>
+  </div>
+</main>
+
+<!-- photo options -->
+<dialog id="sheet" aria-label="Photo options">
+  <div class="sheet">
+    <img class="sheet-img" id="sh-img" alt="">
+    <p class="name" id="sh-name"></p>
+    <div class="field">
+      <label class="mono" for="sh-series">Series</label>
+      <select id="sh-series"></select>
+    </div>
+    <div class="field">
+      <label class="mono" for="sh-alt">Description <span style="text-transform:none;letter-spacing:0">(for screen readers, optional)</span></label>
+      <input id="sh-alt" type="text" placeholder="e.g. A BART train passes a painted wall">
+    </div>
+    <div class="sheet-row">
+      <button class="btn small" type="button" id="sh-first">Move to start</button>
+      <button class="btn small" type="button" id="sh-last">Move to end</button>
+    </div>
+    <div class="sheet-row">
+      <button class="btn small danger" type="button" id="sh-delete">Delete photo</button>
+      <button class="btn small primary" type="button" id="sh-done">Done</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="vendor/sortable-1.15.2.min.js"></script>
+<script>
+"use strict";
+const OWNER = "aaronnewie", REPO = "aaron-douglas-ng-photography", BRANCH = "main";
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const BOOKS = [["black-and-white", "Black & White"], ["color", "Color"]];
+const IMAGE = /\.(jpe?g|png|webp|avif|gif)$/i;
+const PHOTO_LINE = /^([^:]+\.(?:jpe?g|png|webp|avif|gif))\s*(?::\s*(.*))?$/i;
+const UPLOAD_EDGE = 3000;          // long edge for uploads; the site makes its own web sizes from these
+const TOKEN_KEY = "adn-editor-token";
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+  del: k => { try { localStorage.removeItem(k); } catch (_) {} },
+};
+const byName = (a, b) => a.localeCompare(b, undefined, { numeric:true, sensitivity:"base" });
+const tidy = s => s.replace(/^\d+[\s._-]*/, "").replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+let uid = 0; const newId = () => "i" + (++uid);
+
+let token = store.get(TOKEN_KEY);
+let base = null;            // { commit, tree, files: Map(path -> sha), infos: Map(path -> text) } as loaded
+let state = null;           // { "black-and-white": [series], color: [series] }
+let book = "black-and-white";
+let dirty = false;
+const thumbCache = new Map();   // blob sha -> a preview URL known to work (survives saves until the site republishes)
+
+/* ---------- GitHub ---------- */
+async function gh(path, opts = {}) {
+  const headers = { Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json" };
+  if (opts.body) headers["Content-Type"] = "application/json";
+  const r = await fetch(API + path, { ...opts, headers, cache:"no-store" });
+  if (!r.ok) {
+    let msg = ""; try { msg = (await r.json()).message || ""; } catch (_) {}
+    const e = new Error(msg || `GitHub said ${r.status}`); e.status = r.status; throw e;
+  }
+  return r.status === 204 ? null : r.json();
+}
+const b64ToText = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, "")), c => c.charCodeAt(0)));
+const blobToB64 = blob => new Promise((res, rej) => {
+  const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = () => rej(fr.error); fr.readAsDataURL(blob);
+});
+
+async function loadFromGitHub() {
+  const ref = await gh(`/git/ref/heads/${BRANCH}`);
+  const commit = await gh(`/git/commits/${ref.object.sha}`);
+  const tree = await gh(`/git/trees/${commit.tree.sha}?recursive=1`);
+  const files = new Map(), infos = new Map();
+  for (const t of tree.tree) {
+    if (t.type !== "blob") continue;
+    const parts = t.path.split("/");
+    if (parts[0] !== "photos" || !BOOKS.some(([k]) => k === parts[1])) continue;   // covers etc. are left alone
+    if (parts.length === 4 && (IMAGE.test(parts[3]) || parts[3] === "info.txt")) files.set(t.path, t.sha);
+    if (parts.length === 3 && IMAGE.test(parts[2])) files.set(t.path, t.sha);       // photo dropped straight into a book
+  }
+  await Promise.all([...files].filter(([p]) => p.endsWith("/info.txt")).map(async ([p, sha]) => {
+    const blob = await gh(`/git/blobs/${sha}`); infos.set(p, b64ToText(blob.content));
+  }));
+  base = { commit:ref.object.sha, tree:commit.tree.sha, files, infos, truncated:tree.truncated };
+  state = {};
+  for (const [k] of BOOKS) {
+    const folders = new Map();
+    for (const [p, sha] of files) {
+      const parts = p.split("/"); if (parts[1] !== k) continue;
+      const folder = parts.length === 4 ? parts[2] : "";
+      if (!folders.has(folder)) folders.set(folder, []);
+      if (IMAGE.test(parts[parts.length - 1])) folders.get(folder).push({ name:parts[parts.length - 1], path:p, sha });
+    }
+    state[k] = [...folders.keys()].sort(byName).map(folder => {
+      const info = parseInfo(infos.get(`photos/${k}/${folder}/info.txt`) || "");
+      const rank = n => { const i = info.order.indexOf(n.toLowerCase()); return i < 0 ? Infinity : i; };
+      const photos = folders.get(folder).sort((a, b) => (rank(a.name) - rank(b.name)) || byName(a.name, b.name))
+        .map(f => ({ id:newId(), name:f.name, origPath:f.path, sha:f.sha, alt:info.alts[f.name.toLowerCase()] || "" }));
+      const title = folder ? tidy(folder) : "Unsorted";
+      const s = { id:newId(), title, note:info.note, photos, origFolder:folder || null, origTitle:title,
+                  origDir:folder ? `photos/${k}/${folder}` : null, hadInfo:infos.has(`photos/${k}/${folder}/info.txt`) };
+      s.origKey = signature(s);
+      return s;
+    });
+  }
+}
+function parseInfo(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim());
+  const note = lines.find(l => l && !PHOTO_LINE.test(l)) || "";
+  const alts = {}, order = [];
+  for (const l of lines) { const m = l.match(PHOTO_LINE); if (!m) continue; const n = m[1].trim().toLowerCase(); order.push(n); if (m[2]) alts[n] = m[2].trim(); }
+  return { note, alts, order };
+}
+
+/* ---------- what the repository should look like ---------- */
+const pad = n => String(n).padStart(2, "0");
+const cleanTitle = t => t.replace(/[\/\\:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
+const cleanName = n => {
+  const dot = n.lastIndexOf("."), stem = (dot > 0 ? n.slice(0, dot) : n), ext = dot > 0 ? n.slice(dot).toLowerCase() : ".jpg";
+  return (stem.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "photo") + ext;
+};
+// note + photos in order + descriptions: if this matches what was loaded, the series' info.txt needs no rewrite
+const signature = s => JSON.stringify([s.note.trim(), s.photos.map(p => [p.name, p.alt.trim()])]);
+
+// Folder and file names stay exactly as they are unless an edit needs them to change,
+// so opening the editor and saving one small change never renames everything.
+function desiredFiles() {
+  const out = new Map();     // path -> { photo } | { text } | { keep }
+  for (const [k] of BOOKS) {
+    const list = state[k];
+    let folders = list.map(s => s.origFolder && s.title === s.origTitle ? s.origFolder : null);
+    const stable = folders.every(Boolean) && folders.every((f, i) => i === 0 || byName(folders[i - 1], f) < 0);
+    if (!stable) folders = list.map((s, i) => `${pad(i + 1)} ${cleanTitle(s.title)}`);
+    list.forEach((s, i) => {
+      const dir = `photos/${k}/${folders[i]}`;
+      const used = new Set(["info.txt"]);
+      const lines = [s.note.trim()];
+      for (const p of s.photos) {
+        let name = p.origPath ? p.name : cleanName(p.name), n = 2;
+        while (used.has(name.toLowerCase())) { const d = name.lastIndexOf("."); name = name.slice(0, d).replace(/-\d+$/, "") + "-" + n++ + name.slice(d); }
+        used.add(name.toLowerCase());
+        out.set(`${dir}/${name}`, { photo:p });
+        lines.push(p.alt.trim() ? `${name}: ${p.alt.trim().replace(/\s+/g, " ")}` : name);
+      }
+      const info = `${dir}/info.txt`;
+      if (!s.origDir || signature(s) !== s.origKey || (dir !== s.origDir && s.hadInfo)) out.set(info, { text:lines.join("\n") + "\n" });
+      else if (s.hadInfo) out.set(info, { keep:true });
+    });
+  }
+  return out;
+}
+function plan() {
+  const want = desiredFiles(), changes = [];
+  for (const [path, v] of want) {
+    if (v.keep) continue;
+    if (v.text !== undefined) { if (base.infos.get(path) !== v.text) changes.push({ path, text:v.text }); }
+    else if (!v.photo.sha || base.files.get(path) !== v.photo.sha) changes.push({ path, photo:v.photo });
+  }
+  for (const path of base.files.keys()) if (!want.has(path)) changes.push({ path, remove:true });
+  return changes;
+}
+function refreshDirty() {
+  dirty = plan().length > 0;
+  const btn = $("#save");
+  btn.disabled = !dirty; btn.textContent = dirty ? "Save" : "Saved";
+  if (dirty) setStatus("Unsaved changes");
+}
+
+/* ---------- saving ---------- */
+async function save() {
+  const changes = plan(); if (!changes.length) return;
+  showBusy("Checking for other changes");
+  try {
+    const ref = await gh(`/git/ref/heads/${BRANCH}`);
+    if (ref.object.sha !== base.commit) {
+      hideBusy();
+      alert("The site was changed somewhere else (probably on GitHub) since you opened the editor.\n\nPress Discard changes to load the latest version, then make your edits again.");
+      return;
+    }
+    const uploads = changes.filter(c => c.photo && !c.photo.sha);
+    for (let i = 0; i < uploads.length; i++) {
+      showBusy(`Uploading photo ${i + 1} of ${uploads.length}`);
+      const p = uploads[i].photo;
+      const res = await gh("/git/blobs", { method:"POST", body:JSON.stringify({ content:await blobToB64(p.file), encoding:"base64" }) });
+      p.sha = res.sha; thumbCache.set(res.sha, p.preview);
+    }
+    showBusy("Saving");
+    const tree = changes.map(c => c.remove ? { path:c.path, mode:"100644", type:"blob", sha:null }
+      : c.text !== undefined ? { path:c.path, mode:"100644", type:"blob", content:c.text }
+      : { path:c.path, mode:"100644", type:"blob", sha:c.photo.sha });
+    const newTree = await gh("/git/trees", { method:"POST", body:JSON.stringify({ base_tree:base.tree, tree }) });
+    const commit = await gh("/git/commits", { method:"POST", body:JSON.stringify({
+      message:summary(changes), tree:newTree.sha, parents:[base.commit] }) });
+    await gh(`/git/refs/heads/${BRANCH}`, { method:"PATCH", body:JSON.stringify({ sha:commit.sha, force:false }) });
+    // remember previews by photo so tiles keep showing while the site republishes
+    for (const [k] of BOOKS) for (const s of state[k]) for (const p of s.photos) if (p.sha && !thumbCache.has(p.sha)) thumbCache.set(p.sha, thumbUrl(p.origPath));
+    showBusy("Reloading");
+    await loadFromGitHub(); render(); refreshDirty();
+    hideBusy();
+    toast("Saved. Your site updates in about 2 minutes.");
+    watchDeploy(commit.sha);
+  } catch (e) {
+    hideBusy();
+    if (e.status === 403 || e.status === 404) alert("GitHub didn't allow saving. Make sure your key has Contents set to “Read and write” for this site.\n\n" + e.message);
+    else alert("Couldn't save: " + e.message + "\n\nNothing was changed on your site. Check your connection and try again.");
+    refreshDirty();
+  }
+}
+function summary(changes) {
+  const added = changes.filter(c => c.photo && !base.files.has(c.path) && !c.photo.origPath).length;
+  const removedPhotos = changes.filter(c => c.remove && IMAGE.test(c.path)).length;
+  const moved = changes.filter(c => c.photo && c.photo.origPath).length;
+  const bits = [];
+  if (added) bits.push(`add ${added} photo${added > 1 ? "s" : ""}`);
+  if (moved) bits.push(`move ${moved} photo${moved > 1 ? "s" : ""}`);
+  const deleted = removedPhotos - moved; if (deleted > 0) bits.push(`delete ${deleted} photo${deleted > 1 ? "s" : ""}`);
+  return "Site editor: " + (bits.join(", ") || "update series") ;
+}
+async function watchDeploy(sha) {
+  setStatus("Publishing…");
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 8000));
+    let run;
+    try { run = (await gh(`/actions/runs?head_sha=${sha}&per_page=1`)).workflow_runs[0]; }
+    catch (_) { setStatus("Live in about 2 minutes"); return; }   // key has no Actions access; that's fine
+    if (run && run.status === "completed") {
+      if (run.conclusion === "success") setStatus("Live ✓", "ok"); else setStatus("Publishing failed — check GitHub Actions", "err");
+      return;
+    }
+  }
+}
+
+/* ---------- photos added from this device ---------- */
+async function prepareUpload(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();     // browsers turn the photo upright here
+    const s = Math.min(1, UPLOAD_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * s), h = Math.round(img.naturalHeight * s);
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", .9));   // new JPEG: no camera data or location
+    if (!blob) throw new Error("encode");
+    let stem = file.name.replace(/\.[^.]+$/, "");
+    if (!stem || /^image$/i.test(stem)) stem = "photo-" + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
+    return { id:newId(), name:stem + ".jpg", origPath:null, sha:null, alt:"", file:blob, preview:URL.createObjectURL(blob) };
+  } finally { URL.revokeObjectURL(url); }
+}
+async function addFiles(series, files) {
+  files = [...files].filter(f => f.type.startsWith("image/") || IMAGE.test(f.name) || /\.hei[cf]$/i.test(f.name));
+  if (!files.length) return;
+  showBusy(`Preparing ${files.length} photo${files.length > 1 ? "s" : ""}`);
+  const failed = [];
+  for (const f of files) {
+    try { series.photos.push(await prepareUpload(f)); }
+    catch (_) { failed.push(f.name); }
+  }
+  hideBusy(); render(); refreshDirty();
+  if (failed.length) alert(`This browser couldn't open: ${failed.join(", ")}.\n\nIf they're HEIC photos, try adding them from an iPhone or iPad, or export them as JPEG first.`);
+  else toast(`Added ${files.length} photo${files.length > 1 ? "s" : ""}. Press Save when you're done.`);
+}
+
+/* ---------- drawing the editor ---------- */
+const thumbUrl = path => path ? encodeURI(path.replace(/^photos\//, "thumbs/")) : "";
+function tileImg(p) {
+  const img = document.createElement("img");
+  img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+  const tries = [p.preview, thumbUrl(p.origPath), thumbCache.get(p.sha),
+    p.origPath ? `https://raw.githubusercontent.com/${OWNER}/${REPO}/${base.commit}/${encodeURI(p.origPath)}` : null].filter(Boolean);
+  let i = 0; img.src = tries[i];
+  img.onerror = () => { if (++i < tries.length) img.src = tries[i]; };
+  return img;
+}
+const ICON = {
+  grip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+};
+let sortables = [];
+function render() {
+  sortables.forEach(s => s.destroy()); sortables = [];
+  const list = $("#series-list"); list.textContent = "";
+  state[book].forEach((s, si) => {
+    const card = document.createElement("section");
+    card.className = "series"; card.dataset.id = s.id;
+    card.innerHTML = `
+      <div class="s-head">
+        <span class="icon-btn s-handle" title="Drag to reorder series" aria-hidden="true">${ICON.grip}</span>
+        <div class="s-fields">
+          <input class="s-title" aria-label="Series title" value="">
+          <input class="s-note" aria-label="Line under the title" placeholder="Bay Area · 2026" value="">
+        </div>
+        <div class="s-actions"><button class="icon-btn s-del" type="button" aria-label="Delete series">${ICON.trash}</button></div>
+      </div>
+      <p class="s-count">${s.photos.length} photo${s.photos.length === 1 ? "" : "s"}</p>
+      <div class="grid" data-series="${s.id}"></div>
+      <div class="add-row">
+        <label class="btn small file-label">+ Add photos<input type="file" accept="image/*" multiple></label>
+      </div>`;
+    $(".s-title", card).value = s.title;
+    $(".s-note", card).value = s.note;
+    $(".s-title", card).addEventListener("input", e => { s.title = e.target.value; refreshDirty(); });
+    $(".s-title", card).addEventListener("blur", e => { if (!e.target.value.trim()) { s.title = "Untitled"; e.target.value = s.title; refreshDirty(); } });
+    $(".s-note", card).addEventListener("input", e => { s.note = e.target.value; refreshDirty(); });
+    $(".s-del", card).addEventListener("click", () => {
+      const n = s.photos.length;
+      if (n && !confirm(`Delete “${s.title}” and its ${n} photo${n > 1 ? "s" : ""}?`)) return;
+      state[book].splice(state[book].indexOf(s), 1); render(); refreshDirty();
+    });
+    $("input[type=file]", card).addEventListener("change", e => { const f = [...e.target.files]; e.target.value = ""; addFiles(s, f); });
+    const grid = $(".grid", card);
+    s.photos.forEach((p, pi) => {
+      const t = document.createElement("div");
+      t.className = "tile"; t.dataset.id = p.id; t.tabIndex = 0;
+      t.setAttribute("role", "button"); t.setAttribute("aria-label", `Photo ${pi + 1}: ${p.name}`);
+      t.appendChild(tileImg(p));
+      const b = document.createElement("span"); b.className = "badge" + (p.sha ? "" : " new"); b.textContent = p.sha ? pi + 1 : "New";
+      t.appendChild(b);
+      t.addEventListener("click", () => openSheet(p));
+      t.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSheet(p); } });
+      grid.appendChild(t);
+    });
+    // drop photo files from a computer onto a series
+    grid.addEventListener("dragover", e => { if (e.dataTransfer?.types?.includes("Files")) { e.preventDefault(); grid.classList.add("drop-target"); } });
+    grid.addEventListener("dragleave", () => grid.classList.remove("drop-target"));
+    grid.addEventListener("drop", e => { if (!e.dataTransfer?.files?.length) return; e.preventDefault(); grid.classList.remove("drop-target"); addFiles(s, e.dataTransfer.files); });
+    sortables.push(Sortable.create(grid, {
+      group:"photos", animation:160, draggable:".tile", forceFallback:true, fallbackTolerance:4,
+      delay:220, delayOnTouchOnly:true, touchStartThreshold:6,
+      ghostClass:"ghost", chosenClass:"chosen", dragClass:"drag",
+      scroll:true, scrollSensitivity:90, scrollSpeed:14, bubbleScroll:true,
+      onEnd:e => movePhoto(e.from.dataset.series, e.oldDraggableIndex, e.to.dataset.series, e.newDraggableIndex),
+    }));
+    list.appendChild(card);
+  });
+  sortables.push(Sortable.create(list, {
+    handle:".s-handle", draggable:".series", animation:160, ghostClass:"ghost", forceFallback:true,
+    onEnd:e => { if (e.oldIndex === e.newIndex) return; const arr = state[book]; arr.splice(e.newIndex, 0, arr.splice(e.oldIndex, 1)[0]); setTimeout(() => { render(); refreshDirty(); }); },
+  }));
+}
+function findSeries(id) { for (const [k] of BOOKS) { const s = state[k].find(x => x.id === id); if (s) return s; } return null; }
+function movePhoto(fromId, from, toId, to) {
+  const a = findSeries(fromId), b = findSeries(toId);
+  if (!a || !b || (a === b && from === to)) return;
+  const [p] = a.photos.splice(from, 1); b.photos.splice(to, 0, p);
+  setTimeout(() => { render(); refreshDirty(); });
+}
+
+/* ---------- photo options ---------- */
+const sheet = $("#sheet"); let sheetPhoto = null;
+function seriesOf(p) { for (const [k] of BOOKS) for (const s of state[k]) if (s.photos.includes(p)) return s; return null; }
+function openSheet(p) {
+  sheetPhoto = p;
+  const s = seriesOf(p);
+  $("#sh-img").src = p.preview || thumbCache.get(p.sha) || thumbUrl(p.origPath);
+  $("#sh-img").onerror = () => { $("#sh-img").onerror = null; $("#sh-img").src = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${base.commit}/${encodeURI(p.origPath || "")}`; };
+  $("#sh-name").textContent = p.name + (p.sha ? "" : " · not saved yet");
+  $("#sh-alt").value = p.alt;
+  const sel = $("#sh-series"); sel.textContent = "";
+  for (const [k, label] of BOOKS) {
+    const g = document.createElement("optgroup"); g.label = label;
+    for (const x of state[k]) { const o = new Option(x.title || "Untitled", x.id, false, x === s); g.appendChild(o); }
+    sel.appendChild(g);
+  }
+  if (typeof sheet.showModal === "function") sheet.showModal(); else sheet.setAttribute("open", "");
+}
+function closeSheet() { if (sheet.open) { if (typeof sheet.close === "function") sheet.close(); else sheet.removeAttribute("open"); } sheetPhoto = null; render(); refreshDirty(); }
+$("#sh-alt").addEventListener("input", e => { if (sheetPhoto) { sheetPhoto.alt = e.target.value; refreshDirty(); } });
+$("#sh-series").addEventListener("change", e => {
+  const p = sheetPhoto, from = seriesOf(p), to = findSeries(e.target.value);
+  if (!p || !to || to === from) return;
+  from.photos.splice(from.photos.indexOf(p), 1); to.photos.push(p);
+  if (!state[book].includes(to)) { book = BOOKS.find(([k]) => state[k].includes(to))[0]; syncBookButtons(); }
+  toast(`Moved to ${to.title}`); refreshDirty();
+});
+$("#sh-first").addEventListener("click", () => { const s = seriesOf(sheetPhoto); s.photos.unshift(...s.photos.splice(s.photos.indexOf(sheetPhoto), 1)); closeSheet(); });
+$("#sh-last").addEventListener("click", () => { const s = seriesOf(sheetPhoto); s.photos.push(...s.photos.splice(s.photos.indexOf(sheetPhoto), 1)); closeSheet(); });
+$("#sh-delete").addEventListener("click", () => {
+  if (!confirm("Delete this photo from your site?")) return;
+  const s = seriesOf(sheetPhoto); s.photos.splice(s.photos.indexOf(sheetPhoto), 1); closeSheet();
+});
+$("#sh-done").addEventListener("click", closeSheet);
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+sheet.addEventListener("close", () => { if (sheetPhoto) closeSheet(); });
+
+/* ---------- the rest of the page ---------- */
+function syncBookButtons() { $$("#books button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.book === book))); render(); }
+$$("#books button").forEach(b => b.addEventListener("click", () => { book = b.dataset.book; syncBookButtons(); scrollTo({ top:0 }); }));
+$("#new-series").addEventListener("click", () => {
+  state[book].push({ id:newId(), title:"New series", note:"Bay Area · " + new Date().getFullYear(), photos:[] });
+  render(); refreshDirty();
+  const last = $$(".series").pop(); last.scrollIntoView({ behavior:"smooth", block:"center" });
+  const t = $(".s-title", last); t.focus({ preventScroll:true }); t.select();
+});
+$("#save").addEventListener("click", save);
+$("#discard").addEventListener("click", async () => {
+  if (dirty && !confirm("Throw away everything you haven't saved?")) return;
+  await start();
+});
+$("#signout").addEventListener("click", () => {
+  if (dirty && !confirm("You have unsaved changes. Disconnect anyway?")) return;
+  store.del(TOKEN_KEY); token = null; dirty = false; location.reload();
+});
+addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+let statusTimer = 0;
+function setStatus(text, kind = "") { const s = $("#status"); s.textContent = text; s.className = "status" + (kind ? " " + kind : ""); }
+function showBusy(text) { $("#busy-text").textContent = text; $("#busy").hidden = false; }
+function hideBusy() { $("#busy").hidden = true; }
+function toast(msg) {
+  $$(".toast").forEach(t => t.remove());
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
+}
+
+async function start() {
+  if (!token) { $("#signin").hidden = false; return; }
+  showBusy("Loading your photos");
+  try {
+    await loadFromGitHub();
+  } catch (e) {
+    hideBusy();
+    if (e.status === 401 || e.status === 403 || e.status === 404) {
+      store.del(TOKEN_KEY); token = null;
+      $("#signin").hidden = false; $("#editor").hidden = true; $("#books").hidden = true; $("#save").hidden = true;
+      $("#signin-err").textContent = "That key didn't work for this site. Check it has access to aaron-douglas-ng-photography with Contents: Read and write, then paste it again.";
+    } else {
+      setStatus("Couldn't reach GitHub", "err");
+      alert("Couldn't reach GitHub: " + e.message + "\n\nCheck your connection and reload.");
+    }
+    return;
+  }
+  hideBusy();
+  $("#signin").hidden = true; $("#editor").hidden = false; $("#books").hidden = false; $("#save").hidden = false;
+  render(); refreshDirty(); if (!dirty) setStatus("");
+}
+$("#connect").addEventListener("click", async () => {
+  const v = $("#token").value.trim();
+  if (!v) { $("#signin-err").textContent = "Paste your GitHub key first."; return; }
+  token = v; store.set(TOKEN_KEY, v); $("#signin-err").textContent = ""; $("#token").value = "";
+  await start();
+});
+$("#token").addEventListener("keydown", e => { if (e.key === "Enter") $("#connect").click(); });
+start();
+</script>
+</body>
+</html>

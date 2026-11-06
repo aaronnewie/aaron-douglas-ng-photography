@@ -5,11 +5,15 @@
 //
 // Each folder inside a book is one series. The number at the front of the
 // folder name sets the order and is hidden on the site ("01 Transit" -> "Transit").
-// Photos inside a series are shown in filename order.
+// Photos inside a series are shown in the order info.txt lists them (the
+// site editor at /edit.html writes that list); any photo not listed follows,
+// in filename order.
 //
 // Optional info.txt in a series folder:
 //   line 1:          the small line under the series title, e.g. "Bay Area · 2026"
-//   later lines:     "filename.jpg: description" for screen readers (alt text)
+//   later lines:     one photo per line, in display order:
+//                      filename.jpg
+//                      filename.jpg: description for screen readers (alt text)
 //
 // Usage:
 //   node scripts/build-photos.mjs          writes ./photos.json (for previewing locally)
@@ -24,19 +28,24 @@ const IMAGE = /\.(jpe?g|png|webp|avif|gif)$/i;
 
 const byName = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
 const tidy = s => s.replace(/^\d+[\s._-]*/, "").replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
-const cameraName = /^(dsc|img|_?dsc|pxl|p\d|dscf|dscn|r\d{3,}|\d+)[\s_-]*\d*$/i;
+// camera-style names ("DSC_0426", "P1040077", "IMG 2201 2") don't make useful descriptions
+const cameraName = /^(dsc[fn]?|img|pxl|crw|p\d+|r\d{3,}|\d+)[\s\d-]*$/i;
+const PHOTO_LINE = /^([^:]+\.(?:jpe?g|png|webp|avif|gif))\s*(?::\s*(.*))?$/i;
 
 async function readInfo(dir) {
   try {
     const lines = (await readFile(path.join(dir, "info.txt"), "utf8")).split(/\r?\n/).map(l => l.trim());
-    const note = lines.find(l => l && !/^[^:]+\.\w{3,4}\s*:/.test(l)) || "";
-    const alts = {};
+    const note = lines.find(l => l && !PHOTO_LINE.test(l)) || "";
+    const alts = {}, order = [];
     for (const l of lines) {
-      const m = l.match(/^([^:]+\.\w{3,4})\s*:\s*(.+)$/);
-      if (m) alts[m[1].trim().toLowerCase()] = m[2].trim();
+      const m = l.match(PHOTO_LINE);
+      if (!m) continue;
+      const name = m[1].trim().toLowerCase();
+      order.push(name);
+      if (m[2]) alts[name] = m[2].trim();
     }
-    return { note, alts };
-  } catch { return { note: "", alts: {} }; }
+    return { note, alts, order };
+  } catch { return { note: "", alts: {}, order: [] }; }
 }
 
 const out = {};
@@ -51,12 +60,14 @@ for (const book of BOOKS) {
   if (loose.length) folders.unshift("");            // photos dropped straight into the book folder
   for (const folder of folders) {
     const sdir = path.join(dir, folder);
-    const files = folder ? (await readdir(sdir)).filter(n => IMAGE.test(n)).sort(byName) : loose;
-    const { note, alts } = folder ? await readInfo(sdir) : { note: "", alts: {} };
+    const { note, alts, order } = folder ? await readInfo(sdir) : { note: "", alts: {}, order: [] };
+    const rank = n => { const i = order.indexOf(n.toLowerCase()); return i < 0 ? Infinity : i; };
+    const files = (folder ? (await readdir(sdir)).filter(n => IMAGE.test(n)) : loose)
+      .sort((a, b) => (rank(a) - rank(b)) || byName(a, b));
     const title = folder ? tidy(folder) : "";
     const photos = files.map(name => {
       const base = path.parse(name).name;
-      const fallback = cameraName.test(base) ? `${title || "Photograph"}` : tidy(base);
+      const fallback = cameraName.test(tidy(base)) ? `${title || "Photograph"}` : tidy(base);
       return { src: ["photos", book, folder, name].filter(Boolean).join("/"), alt: alts[name.toLowerCase()] || fallback };
     });
     count += photos.length;
