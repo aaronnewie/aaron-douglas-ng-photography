@@ -181,7 +181,7 @@ body.locked{overflow:hidden}
 }
 .folder.dragging{z-index:9999 !important}
 .folder.away{opacity:0 !important;transform:translateY(40px) scale(.94) !important;pointer-events:none}
-.folder.dragging{cursor:grabbing;transform:translateY(-8px) scale(1.03) !important;transition:transform .15s var(--ease-out)}
+.folder.dragging{cursor:grabbing;transform:translateY(-8px) scale(1.03) !important;transition:transform .15s var(--ease-out);will-change:translate,transform}
 .folder.dragging .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 60px 60px -26px rgba(0,0,0,.95)}
 
 /* ---------- share: desktop "view on phone" popover, phone share menu + full-screen QR ---------- */
@@ -655,18 +655,20 @@ function enableDrag(f) {
       $("#reset").hidden = false;
     }
     nx = ox + ddx; ny = oy + ddy;
-    if (!raf) raf = requestAnimationFrame(() => {
-      raf = 0;
-      f.style.setProperty("--dx", nx + "px");
-      f.style.setProperty("--dy", ny + "px");
-    });
+    // browsers already deliver pointermove once per frame, so apply it straight away (no extra frame of lag).
+    // An inline translate is used because changing --dx/--dy would restyle the whole book on every frame.
+    f.style.translate = `calc(-50% + var(--bx) + ${nx}px) calc(-50% + var(--by) + ${ny}px)`;
   });
   const end = e => {
     if (e.pointerId !== id) return;
     id = null;
-    if (raf) { cancelAnimationFrame(raf); raf = 0; f.style.setProperty("--dx", nx + "px"); f.style.setProperty("--dy", ny + "px"); }
+    if (moved) {
+      f.style.setProperty("--dx", nx + "px");
+      f.style.setProperty("--dy", ny + "px");
+      f.style.translate = "";
+      justDragged = true; setTimeout(() => { justDragged = false; }, 60);
+    }
     f.classList.remove("dragging");
-    if (moved) { justDragged = true; setTimeout(() => { justDragged = false; }, 60); }
   };
   f.addEventListener("pointerup", end);
   f.addEventListener("pointercancel", end);
