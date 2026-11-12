@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Aaron Douglas Ng, photographer, Bay Area. Black & white and color photographs.">
 <meta name="theme-color" content="#131514">
-<title>Aaron Douglas Ng</title>
+<title>Aaron Douglas Ng — Photography</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Hanken+Grotesk:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
@@ -329,18 +329,24 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 /* lightbox */
 .lightbox{
   position:fixed;inset:0;z-index:80;
-  background:rgba(8,9,9,.95);
+  background:#080909;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   padding:calc(64px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
   color:#eef0ec;
 }
 .lightbox{touch-action:none}  /* swipes on the dark area count too, and the page underneath can't scroll or pull-to-refresh */
+.lightbox.zoomed img{will-change:transform;cursor:grab}
+.lightbox.zoomed img:active{cursor:grabbing}
 .lightbox img{touch-action:none;user-select:none;-webkit-user-drag:none;max-width:100%;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);object-fit:contain}
 .lightbox p{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;opacity:.8;text-align:center}
 .lightbox .btn{color:#eef0ec;border-color:rgba(255,255,255,.3)}
 .lightbox .btn:hover{border-color:#fff;background:rgba(255,255,255,.08)}
-#lb-close{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:max(16px, env(safe-area-inset-right,0px))}
-.lb-nav{display:flex;gap:10px}
+#lb-close{position:absolute;z-index:2;top:calc(14px + env(safe-area-inset-top,0px));right:max(16px, env(safe-area-inset-right,0px))}
+.lb-nav{display:flex;gap:10px;position:relative;z-index:2}
+.lightbox p{position:relative;z-index:2}
+/* a zoomed photo slides under the buttons and caption, so give them a backing to stay readable */
+.lightbox.zoomed .btn{background:rgba(8,9,9,.8)}
+.lightbox.zoomed p{text-shadow:0 0 6px #000,0 0 2px #000}
 
 @media (pointer:coarse){ .btn{min-height:44px;padding-inline:18px} }
 
@@ -458,7 +464,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     </div>
   </div>
   <footer class="foot">
-    <span>Drag to arrange · Click/Tap to open<button type="button" id="reset" hidden>Reset</button></span>
+    <span>Drag to arrange · <span id="open-verb">Click</span> to open<button type="button" id="reset" hidden>Reset</button></span>
   </footer>
 </main>
 
@@ -476,7 +482,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 
 <!-- About -->
 <section class="view" data-view="about" id="view-about" hidden aria-label="About me">
-  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="bar"><button class="btn" data-close>&larr; Books</button><nav class="vnav" aria-label="Sections"></nav></div>
   <div class="wrap">
     <div class="vhead">
       <div><h2>About me</h2></div>
@@ -484,14 +490,14 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     <div class="about">
       <img src="photos/covers/about.jpg" alt="Self-portrait in a split mirror, holding a Nikon camera, with a San Jose Sharks plush on my shoulder">
       <div>
-        <p>I’m starting to see, that all we are are memories. Let's hold on with frames.</p>
+        <p>I’m starting to see that all we are is memories. Let’s hold on with frames.</p>
         <dl class="facts">
           <dt>Name</dt><dd>Aaron Douglas Ng</dd>
           <dt>Camera</dt><dd>Nikon D5000, Panasonic Lumix LX3, Rewindpix</dd>
           <dt>Shoots</dt><dd>Street, Still Life, Architecture, Portraits</dd>
           <dt>Likes</dt><dd>San Jose Sharks</dd>
           <dt>Dislikes</dt><dd>Every Team Not The Sharks</dd>
-          <dt>Contact</dt><dd><a href="mailto:aarondouglasng@gmail.com">aarondouglasng@gmail.com</a></dd>
+          <dt>Contact</dt><dd id="contact"></dd>
         </dl>
         <div class="jump">
           <button class="btn" data-goto="black-and-white">Black &amp; White &rarr;</button>
@@ -504,7 +510,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 
 <!-- Black & White -->
 <section class="view" data-view="black-and-white" id="view-black-and-white" hidden aria-label="Black and White">
-  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="bar"><button class="btn" data-close>&larr; Books</button><nav class="vnav" aria-label="Sections"></nav></div>
   <div class="wrap">
     <div class="vhead">
       <div><h2>Black &amp; White</h2></div>
@@ -515,7 +521,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 
 <!-- Color -->
 <section class="view" data-view="color" id="view-color" hidden aria-label="Color">
-  <div class="bar"><button class="btn" data-close>&larr; Folders</button><nav class="vnav" aria-label="Sections"></nav></div>
+  <div class="bar"><button class="btn" data-close>&larr; Books</button><nav class="vnav" aria-label="Sections"></nav></div>
   <div class="wrap">
     <div class="vhead">
       <div><h2>Color</h2></div>
@@ -527,20 +533,29 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo">
   <button class="btn" id="lb-close">Close</button>
   <img id="lb-img" alt="">
-  <p id="lb-cap"></p>
+  <p id="lb-cap" aria-live="polite"></p>
   <div class="lb-nav"><button class="btn" id="lb-prev" aria-label="Previous photo">&larr;</button><button class="btn" id="lb-next" aria-label="Next photo">&rarr;</button></div>
 </div>
 
 <script>
 /* ---- Photos come from photos.json, which is generated from the folders in photos/ (see README). ---- */
 const BOOKS = ["black-and-white", "color"];
-const PLACEHOLDERS_UP_TO = 3;   // a series with fewer photos than this shows empty "Photo" frames; set to 0 to turn off
+const PLACEHOLDERS_UP_TO = 0;   // a series with fewer photos than this shows empty "Photo" frames; 0 = off
 const PHOTOS = {}, SERIES = {};
 const SECTIONS = [["black-and-white","B & W"],["color","Color"],["about","About"]];
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+/* "Tap" on touch screens, "Click" with a mouse */
+if (matchMedia("(hover:none), (pointer:coarse)").matches) $("#open-verb").textContent = "Tap";
+
+/* the email address is put together here so it isn't sitting in the page source for spam bots to collect */
+{
+  const mail = ["aarondouglasng", "gmail", "com"]; const addr = mail[0] + "@" + mail[1] + "." + mail[2];
+  const a = document.createElement("a"); a.href = "mailto:" + addr; a.textContent = addr; $("#contact").appendChild(a);
+}
 
 async function loadPhotos() {
   let data = {};
@@ -549,7 +564,7 @@ async function loadPhotos() {
   for (const k of BOOKS) {
     PHOTOS[k] = [];
     SERIES[k] = (data[k] || []).map(g => {
-      const idx = g.photos.map(p => PHOTOS[k].push({ src:p.src, alt:p.alt || "", w:p.w, h:p.h }) - 1);
+      const idx = g.photos.map((p, j) => PHOTOS[k].push({ src:p.src, alt:p.alt || "", w:p.w, h:p.h, series:g.title, pos:j + 1, count:g.photos.length }) - 1);
       return { title:g.title, note:g.note, photos:idx, slots:Math.max(0, PLACEHOLDERS_UP_TO - idx.length) };
     });
   }
@@ -562,7 +577,6 @@ for (const [key, list] of Object.entries(PHOTOS)) {
   const host = $(`[data-grid="${key}"]`);
   host.className = "series-list";
   const groups = SERIES[key] || [{ title:"", note:"", photos:list.map((_, i) => i), slots:0 }];
-  let n = 0;
   groups.forEach(g => {
     const sec = document.createElement("section");
     sec.className = "series";
@@ -582,7 +596,7 @@ for (const [key, list] of Object.entries(PHOTOS)) {
         extra = ` width="${p.w}" height="${p.h}"`;
         if (tw < p.w) extra += ` srcset="${thumb} ${tw}w, ${full} ${p.w}w" sizes="(max-width:760px) 100vw, ${wide ? 760 : 380}px"`;
       }
-      fig.innerHTML = `<button type="button"><img src="${thumb}"${extra} alt="${p.alt}" decoding="async"${n++ > 1 ? ' loading="lazy"' : ""}></button>`;
+      fig.innerHTML = `<button type="button"><img src="${thumb}"${extra} alt="${p.alt}" decoding="async" loading="lazy"></button>`;
       fig.querySelector("button").addEventListener("click", () => openLightbox(key, i));
       const img = fig.querySelector("img");
       img.addEventListener("error", () => { img.removeAttribute("srcset"); img.src = full; }, { once:true });
@@ -727,6 +741,7 @@ async function openFolder(key, mode = "push") {
   if (mode === "push") history.pushState({ album:key }, "", "#" + key);
   else if (mode === "replace") history.replaceState({ album:key }, "", "#" + key);
   view.hidden = false; view.scrollTop = 0; document.body.classList.add("locked");
+  $("#mat").inert = true;
   watchClose("album", () => closeFolder());
   if (!reduce) view.animate([{ opacity:0 }, { opacity:1 }], { duration:260, easing:"ease-out" });
   $("[data-close]", view).focus({preventScroll:true});
@@ -737,6 +752,7 @@ async function closeFolder(fromHistory = false) {
   if (!fromHistory && history.state?.album === current) { stepBack(); return; }  // popstate finishes the job
   const key = current, folder = $(`.folder[data-view="${key}"]`), view = $(`#view-${key}`);
   current = null; unwatch("album");
+  $("#mat").inert = false;
   if (!fromHistory) history.replaceState(null, "", baseUrl());
   folder.focus({preventScroll:true});
   document.body.classList.remove("locked");
@@ -747,6 +763,11 @@ async function closeFolder(fromHistory = false) {
 }
 
 $$("[data-close]").forEach(b => b.addEventListener("click", () => closeFolder()));
+
+/* photos stay unloaded while their book is closed; start on the first two as soon as someone reaches for it */
+function warm(key) { $$(`#view-${key} .frame img`).slice(0, 2).forEach(im => { im.loading = "eager"; }); }
+$$(".folder").forEach(f => ["pointerenter", "focus", "touchstart"].forEach(ev =>
+  f.addEventListener(ev, () => warm(f.dataset.view), { once:true, passive:true })));
 $$(".view [data-goto]").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.goto; if (k === current || busy) return;
   $(`#view-${current}`).hidden = true; current = null; openFolder(k, "replace");
@@ -755,14 +776,19 @@ $$(".view [data-goto]").forEach(b => b.addEventListener("click", () => {
 /* lightbox with previous / next */
 const lb = $("#lightbox");
 let lbKey = null, lbIdx = 0;
+const lbWarm = [];   // neighbours already requested, so the next swipe is instant
 function showLb() {
-  const list = PHOTOS[lbKey], p = list[lbIdx];
+  const list = PHOTOS[lbKey], p = list[lbIdx], n = list.length;
+  resetZoom();
   $("#lb-img").src = encodeURI(p.src); $("#lb-img").alt = p.alt;
-  $("#lb-cap").textContent = list.length > 1 ? `${lbIdx + 1} / ${list.length}` : "";
-  $(".lb-nav").hidden = list.length < 2;
+  $("#lb-cap").textContent = p.series ? `${p.series} · ${p.pos} / ${p.count}` : (n > 1 ? `${lbIdx + 1} / ${n}` : "");
+  $(".lb-nav").hidden = n < 2;
+  lbWarm.length = 0;
+  [1, -1, 2].forEach(d => { const q = list[(lbIdx + d + n) % n]; if (q && q !== p) { const im = new Image(); im.src = encodeURI(q.src); lbWarm.push(im); } });
 }
 function openLightbox(key, i) {
   lbKey = key; lbIdx = i; showLb(); lb.hidden = false; $("#lb-close").focus();
+  const v = $(`#view-${current}`); if (v) v.inert = true;
   history.pushState({ album:current, layer:"lb" }, "", location.href);
   watchClose("lb", () => closeLightbox());
 }
@@ -770,29 +796,112 @@ function stepLb(d) { const n = PHOTOS[lbKey].length; lbIdx = (lbIdx + d + n) % n
 function closeLightbox(fromHistory = false) {
   if (lb.hidden) return;
   if (!fromHistory && history.state?.layer === "lb") { stepBack(); return; }
-  lb.hidden = true; unwatch("lb");
+  lb.hidden = true; unwatch("lb"); resetZoom();
+  const v = $(`#view-${current}`); if (v) v.inert = false;
   const btn = $$(`[data-grid="${lbKey}"] .frame button`)[lbIdx];  // return focus to the photo you were on
   btn?.focus({ preventScroll:true });
 }
 $("#lb-close").addEventListener("click", () => closeLightbox());
 $("#lb-prev").addEventListener("click", () => stepLb(-1));
 $("#lb-next").addEventListener("click", () => stepLb(1));
-lb.addEventListener("click", e => { if (e.target === lb) closeLightbox(); });
+/* Touch and trackpad gestures on the viewer.
+   At normal size: swipe left/right for previous/next, swipe down to close.
+   Pinch with two fingers (or ctrl + scroll / trackpad pinch) to zoom up to 5x, drag to look around
+   while zoomed; pinch back out to return to swiping. */
+const lbImg = $("#lb-img"), MAX_ZOOM = 5;
+const zoom = { s:1, x:0, y:0 };
+const ptrs = new Map();                 // fingers / pointer currently down: id -> {x, y}
+let sw = null, pinch = null, pan = null, dragged = false;
 
-/* swipe on phones: left/right for previous/next, down to close */
-let sw = null;
-lb.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") sw = { x:e.clientX, y:e.clientY, t:Date.now() }; });
-lb.addEventListener("pointerup", e => {
-  if (!sw) return;
-  const dx = e.clientX - sw.x, dy = e.clientY - sw.y, quick = Date.now() - sw.t < 600;
-  sw = null;
-  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && quick) { stepLb(dx < 0 ? 1 : -1); }
-  else if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.3 && quick) { closeLightbox(); }
+const imgCenter = () => ({ x:lbImg.offsetLeft + lbImg.offsetWidth / 2, y:lbImg.offsetTop + lbImg.offsetHeight / 2 });
+function applyZoom(animate) {
+  lbImg.style.transition = animate && !reduce ? "transform .2s ease-out" : "none";
+  lbImg.style.transform = zoom.s === 1 && !zoom.x && !zoom.y ? "" : `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+  lb.classList.toggle("zoomed", zoom.s > 1);
+}
+function resetZoom(animate) {
+  zoom.s = 1; zoom.x = 0; zoom.y = 0; pinch = null; pan = null;
+  applyZoom(animate);
+}
+/* keep the photo from being dragged away from the screen: its edges can reach the screen edges, no further */
+function clampPan() {
+  const c = imgCenter(), w = lbImg.offsetWidth * zoom.s, h = lbImg.offsetHeight * zoom.s, vw = lb.clientWidth, vh = lb.clientHeight;
+  zoom.x = w <= vw ? vw / 2 - c.x : Math.min(w / 2 - c.x, Math.max(vw - c.x - w / 2, zoom.x));
+  zoom.y = h <= vh ? vh / 2 - c.y : Math.min(h / 2 - c.y, Math.max(vh - c.y - h / 2, zoom.y));
+}
+/* zoom to scale s keeping the photo point that was under (px, py) under it */
+function zoomAround(px, py, s, anchor) {
+  const c = imgCenter();
+  zoom.s = Math.min(MAX_ZOOM, Math.max(1, s));
+  zoom.x = px - c.x - zoom.s * anchor.x; zoom.y = py - c.y - zoom.s * anchor.y;
+  clampPan(); applyZoom(false);
+}
+const pointOnPhoto = (px, py) => { const c = imgCenter(); return { x:(px - c.x - zoom.x) / zoom.s, y:(py - c.y - zoom.y) / zoom.s }; };
+const twoFingers = () => { const [a, b] = [...ptrs.values()]; return { x:(a.x + b.x) / 2, y:(a.y + b.y) / 2, d:Math.hypot(a.x - b.x, a.y - b.y) || 1 }; };
+
+lb.addEventListener("pointerdown", e => {
+  if (e.target.closest(".btn")) return;             // buttons stay buttons
+  ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  dragged = false;
+  if (ptrs.size === 2) {
+    sw = null; pan = null;
+    const m = twoFingers(); pinch = { d0:m.d, s0:zoom.s, anchor:pointOnPhoto(m.x, m.y) };
+  } else if (ptrs.size === 1) {
+    if (zoom.s > 1) pan = { x:e.clientX, y:e.clientY, zx:zoom.x, zy:zoom.y };
+    else if (e.pointerType !== "mouse") sw = { x:e.clientX, y:e.clientY, t:Date.now() };
+  }
 });
-lb.addEventListener("pointercancel", () => { sw = null; });
+lb.addEventListener("pointermove", e => {
+  const pt = ptrs.get(e.pointerId); if (!pt) return;
+  pt.x = e.clientX; pt.y = e.clientY;
+  if (pinch && ptrs.size >= 2) { const m = twoFingers(); dragged = true; zoomAround(m.x, m.y, pinch.s0 * m.d / pinch.d0, pinch.anchor); }
+  else if (pan && zoom.s > 1) {
+    const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+    if (Math.hypot(dx, dy) > 6) dragged = true;
+    zoom.x = pan.zx + dx; zoom.y = pan.zy + dy; clampPan(); applyZoom(false);
+  }
+});
+function endPointer(e) {
+  if (!ptrs.delete(e.pointerId)) return;
+  if (pinch && ptrs.size < 2) {                      // a finger came off a pinch
+    pinch = null; dragged = true; sw = null;
+    if (zoom.s < 1.05) resetZoom(true);
+    else if (ptrs.size === 1) { const [q] = ptrs.values(); pan = { x:q.x, y:q.y, zx:zoom.x, zy:zoom.y }; }
+    return;
+  }
+  if (e.type === "pointerup" && sw && ptrs.size === 0) {
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y, quick = Date.now() - sw.t < 600;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && quick) { stepLb(dx < 0 ? 1 : -1); }
+    else if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.3 && quick) { closeLightbox(); }
+  }
+  sw = null; if (!ptrs.size) pan = null;
+}
+lb.addEventListener("pointerup", endPointer);
+lb.addEventListener("pointercancel", endPointer);
+/* a drag that ends over the dark area is not a tap on it */
+lb.addEventListener("click", e => { if (dragged) { dragged = false; return; } if (e.target === lb) closeLightbox(); });
+/* ctrl + scroll wheel, and trackpad pinch in Chrome and Firefox */
+lb.addEventListener("wheel", e => {
+  if (!e.ctrlKey) return;
+  e.preventDefault();
+  const anchor = pointOnPhoto(e.clientX, e.clientY), s = zoom.s * Math.exp(-e.deltaY * 0.01);
+  if (s < 1.02) resetZoom(); else zoomAround(e.clientX, e.clientY, s, anchor);
+}, { passive:false });
+
+/* Tab stays inside whichever pop-up is open */
+function trapTab(root, e) {
+  if (e.key !== "Tab") return;
+  const f = $$("button, a[href]", root).filter(el => !el.disabled && el.getClientRects().length);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1], a = document.activeElement;
+  if (!root.contains(a)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+}
 
 addEventListener("keydown", e => {
   if (!lb.hidden) {
+    trapTab(lb, e);
     if (e.key === "Escape") closeLightbox();
     else if (e.key === "ArrowLeft") stepLb(-1);
     else if (e.key === "ArrowRight") stepLb(1);
@@ -852,7 +961,7 @@ function startFromLink() {
   });
   let lock = null;
   const showQr = async () => {
-    setOpen(false); full.hidden = false; document.body.classList.add("locked");
+    setOpen(false); full.hidden = false; document.body.classList.add("locked"); $("#mat").inert = true;
     history.pushState({ album:current, layer:"qr" }, "", location.href);
     watchClose("qr", () => hideQr());
     $(".qf-close", full).focus({ preventScroll:true });
@@ -861,7 +970,7 @@ function startFromLink() {
   const hideQr = (fromHistory = false) => {
     if (full.hidden) return;
     if (!fromHistory && history.state?.layer === "qr") { stepBack(); return; }
-    full.hidden = true; unwatch("qr");
+    full.hidden = true; unwatch("qr"); $("#mat").inert = !!current;
     if (!current) document.body.classList.remove("locked");
     try { lock?.release(); } catch (_) {} lock = null; btn.focus({ preventScroll:true });
   };
@@ -869,6 +978,7 @@ function startFromLink() {
   $('[data-share="qr"]', pop).addEventListener("click", showQr);
   full.addEventListener("click", () => hideQr());
   addEventListener("keydown", e => {
+    if (e.key === "Tab" && !full.hidden) { e.preventDefault(); return; }   // the close button is the only stop
     if (e.key !== "Escape") return;
     if (!full.hidden) { e.stopImmediatePropagation(); hideQr(); }
     else if (!pop.hidden) { setOpen(false); btn.focus(); }

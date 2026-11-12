@@ -4,7 +4,8 @@ site (the originals in the repository are never changed).
 For every photo in <site>/photos:
   - turns it upright using its camera orientation
   - drops camera metadata (including GPS location)
-  - caps the long edge at 2400px (used by the full-screen viewer)
+  - caps the long edge at 2400px (used by the full-screen viewer); photos that
+    are already that small and clean are not touched
   - writes a copy at most 1200px wide to <site>/thumbs/ (used by the
     gallery grid, much lighter on phones)
 Then adds each photo's width and height to <site>/photos.json so the page
@@ -40,10 +41,14 @@ for f in sorted(photos.rglob("*")):
     if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
         continue
     with Image.open(f) as src:
+        # a photo that is already web size and has no camera data is left exactly as it is,
+        # so re-publishing never re-compresses it
+        clean = max(src.size) <= FULL_EDGE and not src.getexif()
         im = ImageOps.exif_transpose(src)
         im.load()
-    im.thumbnail((FULL_EDGE, FULL_EDGE), Image.LANCZOS)
-    save(im, f, ext, 84)
+    if not clean:
+        im.thumbnail((FULL_EDGE, FULL_EDGE), Image.LANCZOS)
+        save(im, f, ext, 84)
     rel = f.relative_to(photos)
     sizes[f.relative_to(site).as_posix()] = im.size
     small = im.copy()

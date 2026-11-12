@@ -211,7 +211,7 @@ const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const BOOKS = [["black-and-white", "Black & White"], ["color", "Color"]];
 const IMAGE = /\.(jpe?g|png|webp|avif|gif)$/i;
 const PHOTO_LINE = /^([^:]+\.(?:jpe?g|png|webp|avif|gif))\s*(?::\s*(.*))?$/i;
-const UPLOAD_EDGE = 3000;          // long edge for uploads; the site makes its own web sizes from these
+const UPLOAD_EDGE = 2400;          // long edge for uploads: the size the site shows full screen, so the repository only keeps web-size photos
 const TOKEN_KEY = "adn-editor-token";
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -421,7 +421,7 @@ async function prepareUpload(file) {
     const w = Math.round(img.naturalWidth * s), h = Math.round(img.naturalHeight * s);
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     c.getContext("2d").drawImage(img, 0, 0, w, h);
-    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", .9));   // new JPEG: no camera data or location
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", .86));   // new JPEG: no camera data or location
     if (!blob) throw new Error("encode");
     let stem = file.name.replace(/\.[^.]+$/, "");
     if (!stem || /^image$/i.test(stem)) stem = "photo-" + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
