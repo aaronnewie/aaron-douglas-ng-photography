@@ -183,6 +183,18 @@ body.locked{overflow:hidden}
 .folder.away{opacity:0 !important;transform:translateY(40px) scale(.94) !important;pointer-events:none}
 .folder.dragging{cursor:grabbing;transform:translateY(-8px) scale(1.03) !important;transition:transform .15s var(--ease-out);will-change:translate,transform}
 .folder.dragging .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 60px 60px -26px rgba(0,0,0,.95)}
+/* touch screens never tilt or open the cover, so the books are kept flat there: no 3D scene to
+   re-sort while dragging, each book stays one ready-made layer, and nothing is redrawn mid-drag */
+@media (hover:none){
+  .stage{perspective:none}
+  .folder,.body,.cover{transform-style:flat}
+  .rear{display:none}
+  .face{backface-visibility:visible;-webkit-backface-visibility:visible}
+  .folder{will-change:translate}
+  .back{transition:none}
+  .folder.dragging{transform:none !important;transition:none}
+  .folder.dragging .back{box-shadow:inset -1px -1px 0 rgba(0,0,0,.2), 0 30px 50px -22px rgba(0,0,0,.85)}
+}
 
 /* ---------- share: desktop "view on phone" popover, phone share menu + full-screen QR ---------- */
 .share{position:fixed;z-index:40;top:max(14px, env(safe-area-inset-top));right:max(14px, env(safe-area-inset-right))}
