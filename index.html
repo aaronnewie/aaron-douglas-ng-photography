@@ -690,10 +690,12 @@ $$(".folder").forEach(f => {
   enableDrag(f);
 });
 
-$("#reset").addEventListener("click", () => {
+/* put the books back in their starting arrangement (the Reset link, and every time you come back from inside a book) */
+function resetBooks() {
   $$(".folder").forEach(f => { f.style.removeProperty("--dx"); f.style.removeProperty("--dy"); f.style.zIndex = ""; });
   $("#reset").hidden = true;
-});
+}
+$("#reset").addEventListener("click", resetBooks);
 
 /* arrow keys move between folders */
 $("#stage").addEventListener("keydown", e => {
@@ -753,6 +755,7 @@ async function closeFolder(fromHistory = false) {
   const key = current, folder = $(`.folder[data-view="${key}"]`), view = $(`#view-${key}`);
   current = null; unwatch("album");
   $("#mat").inert = false;
+  resetBooks();
   if (!fromHistory) history.replaceState(null, "", baseUrl());
   folder.focus({preventScroll:true});
   document.body.classList.remove("locked");
